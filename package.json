@@ -10,9 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "3d-force-graph": "^1.78.4",
+    "@supabase/supabase-js": "^2.53.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-force-graph-3d": "^1.28.0",
     "three": "^0.179.1"
   },
   "devDependencies": {

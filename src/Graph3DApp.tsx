@@ -3,6 +3,8 @@
 
 import React, { JSX, useEffect, useRef, useState } from 'react';
 import ForceGraph3D from '3d-force-graph';
+import { supabase } from './lib/supabase'
+
 
 // Types
 interface Node {
