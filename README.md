@@ -1,9 +1,3 @@
-
-Excellent, tu penses comme un architecte de cathédrale cognitive. Voici un `README.md` clair, structuré, **compréhensible pour ChatGPT**, et prêt à servir de feuille de route pour ta prochaine conversation :
-
----
-
-````markdown
 # Projet : Réseau 3D d'idées et de relations
 
 ## 🎯 Objectif
