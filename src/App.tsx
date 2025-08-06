@@ -27,15 +27,26 @@ function App() {
 
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
+  const getLinkId = (l: LinkType) =>
+  `${typeof l.source === 'object' ? l.source.id : l.source}|${typeof l.target === 'object' ? l.target.id : l.target}`;
+
   
 
   useEffect(() => {
     async function loadData() {
       const data = await fetchGraphData()
+      console.log("Links chargés :", data.links.map(l => l.id))
+
       setGraphData(data)
     }
     loadData()
   }, [])
+
+// Pour traduire les IDs sélectionnés en objets complets
+const selectedNodeObjects = graphData.nodes.filter(n => selectedNodes.has(n.id));
+const selectedLinkObjects = graphData.links.filter(l => selectedLinks.has(l.id));
+
+  
 
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
@@ -43,11 +54,10 @@ function App() {
         graphData={graphData}
         backgroundColor="#222222"
         linkWidth={(link) => {
-          const l = link as LinkType;
-          const linkId = `${l.source}|${l.target}`;
+          const linkId = getLinkId(link as LinkType);
           return selectedLinks.has(linkId) ? 6 : 2;
         }}
-        
+        linkOpacity={1}
         nodeColor={(node) => {
           const n = node as NodeType;
           return selectedNodes.has(n.id)
@@ -63,32 +73,31 @@ function App() {
           });
         }}
         linkColor={(link) => {
-          const l = link as LinkType;
-          const linkId = `${l.source}|${l.target}`;
-          return selectedLinks.has(linkId) ? 'orange' : '#999';
-        }}        
+          const id = getLinkId(link as LinkType);
+          return selectedLinks.has(id) ? 'orange' : '#aaa';
+        }}
         onLinkClick={(link) => {
-          const l = link as LinkType;
-          const linkId = `${l.source}|${l.target}`;
-          setSelectedLinks(prev => {
-            const newSet = new Set(prev);
-            newSet.has(linkId) ? newSet.delete(linkId) : newSet.add(linkId);
-            return newSet;
-          });
+          const id = getLinkId(link as LinkType);
+          console.log("Lien cliqué :", id);
+          const newSelected = new Set(selectedLinks);
+          newSelected.has(id) ? newSelected.delete(id) : newSelected.add(id);
+          setSelectedLinks(newSelected);
         }}
+        
+        
       />
-      <button onClick={() => {
-        setSelectedNodes(new Set());
-        setSelectedLinks(new Set());
-      }}>Tout désélectionner</button>
       <InfoPanel
-        selectedNodes={selectedNodes}
-        selectedLinks={selectedLinks}
+        selectedNodes={graphData.nodes.filter(node => selectedNodes.has(node.id))}
+        selectedLinks={graphData.links.filter(link => selectedLinks.has(getLinkId(link)))}
+        nodes={graphData.nodes}
+        links={graphData.links}
         onClose={() => {
-          setSelectedNodes(null);
-          setSelectedLinks(null);
+          setSelectedNodes(new Set());
+          setSelectedLinks(new Set());
         }}
       />
+
+
     </div>
   )
 }

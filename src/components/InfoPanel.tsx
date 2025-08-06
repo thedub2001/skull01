@@ -1,17 +1,25 @@
-import React from "react";
-import type { NodeType, LinkType } from "../types/graph";
+import React from "react"
+import type { NodeType, LinkType } from "../types/graph"
 
 interface InfoPanelProps {
-  selectedNode: NodeType | null;
-  selectedLink: LinkType | null;
-  onClose: () => void;
+  selectedNodes: NodeType[];
+  selectedLinks: LinkType[];
+  links: LinkType[]
+  nodes: NodeType[]
+  onClose: () => void
 }
 
-const InfoPanel: React.FC<InfoPanelProps> = ({ selectedNode, selectedLink, onClose }) => {
-  if (!selectedNode && !selectedLink) return null;
+const InfoPanel: React.FC<InfoPanelProps> = ({
+  selectedNodes,
+  selectedLinks,
+  nodes,
+  links,
+  onClose,
+}) => {
+  if (selectedNodes.length === 0 && selectedLinks.length === 0) return null;
 
-  const source = selectedLink?.source as NodeType;
-  const target = selectedLink?.target as NodeType;
+  console.log("== Debug InfoPanel ==");
+  console.log("selectedLinks:", selectedLinks);
 
   return (
     <div className="absolute right-0 top-0 h-full w-80 bg-gray-800 text-white p-4 overflow-y-auto shadow-lg z-50">
@@ -22,27 +30,46 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ selectedNode, selectedLink, onClo
         &times;
       </button>
 
-      {selectedNode && (
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">Nœud sélectionné</h2>
-          <p><span className="font-bold">ID:</span> {selectedNode.id}</p>
-          <p><span className="font-bold">Label:</span> {selectedNode.label}</p>
-          <p><span className="font-bold">Type:</span> {selectedNode.type}</p>
-          <p><span className="font-bold">Niveau:</span> {selectedNode.level}</p>
+      {selectedNodes.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Nœuds sélectionnés</h2>
+          {selectedNodes.map((node) => (
+            <div key={node.id} className="mb-4 border-b border-gray-600 pb-2">
+              <p><span className="font-bold">ID:</span> {node.id}</p>
+              <p><span className="font-bold">Label:</span> {node.label}</p>
+              <p><span className="font-bold">Type:</span> {node.type}</p>
+              <p><span className="font-bold">Niveau:</span> {node.level}</p>
+            </div>
+          ))}
         </div>
       )}
 
-      {selectedLink && (
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">Lien sélectionné</h2>
-          <p><span className="font-bold">ID:</span> {selectedLink.id}</p>
-          <p><span className="font-bold">Source:</span> {source?.label} ({source?.id})</p>
-          <p><span className="font-bold">Cible:</span> {target?.label} ({target?.id})</p>
-          <p><span className="font-bold">Type:</span> {selectedLink.type}</p>
+      {selectedLinks.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Liens sélectionnés</h2>
+          {selectedLinks.map((link) => {
+            const source = typeof link.source === 'string'
+              ? nodes.find(n => n.id === link.source)
+              : link.source as NodeType;
+
+            const target = typeof link.target === 'string'
+              ? nodes.find(n => n.id === link.target)
+              : link.target as NodeType;
+
+            return (
+              <div key={link.id} className="mb-4 border-b border-gray-600 pb-2">
+                <p><span className="font-bold">ID:</span> {link.id}</p>
+                <p><span className="font-bold">Source:</span> {source?.label} ({source?.id})</p>
+                <p><span className="font-bold">Cible:</span> {target?.label} ({target?.id})</p>
+                <p><span className="font-bold">Type:</span> {link.type}</p>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 };
 
-export default InfoPanel;
+
+export default InfoPanel
