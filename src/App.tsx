@@ -25,6 +25,7 @@ function App() {
   }>({ nodes: [], links: [] })
 
   const [selectedNode, setSelectedNode] = useState<NodeType | null>(null)
+  const [selectedLink, setSelectedLink] = useState<LinkType | null>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -45,7 +46,64 @@ function App() {
           setSelectedNode(node as NodeType)
           console.log('Node sélectionné :', node)
         }}
-      />    
+        onLinkClick={(link) => {
+          setSelectedLink(link as LinkType);
+          setSelectedNode(null); // désélectionne le node
+          console.log("Lien sélectionné :", link);
+        }}
+        
+      />
+      {(selectedNode || selectedLink) && (
+        <div
+          style={{
+            position: "absolute",
+            right: 0,
+            top: 0,
+            width: "300px",
+            height: "100%",
+            backgroundColor: "#333",
+            color: "#fff",
+            padding: "1rem",
+            overflowY: "auto",
+          }}
+        >
+          <button
+            onClick={() => {
+              setSelectedNode(null);
+              setSelectedLink(null);
+            }}
+            style={{ float: "right", background: "none", border: "none", color: "#fff" }}
+          >
+            ✕
+          </button>
+
+          {selectedNode && (
+            <>
+              <h3>Noeud sélectionné</h3>
+              <p><strong>ID:</strong> {selectedNode.id}</p>
+              <p><strong>Label:</strong> {selectedNode.label}</p>
+              <p><strong>Type:</strong> {selectedNode.type}</p>
+              <p><strong>Niveau:</strong> {selectedNode.level}</p>
+            </>
+          )}
+
+          {selectedLink && (() => {
+            const source = selectedLink.source as NodeType;
+            const target = selectedLink.target as NodeType;
+
+            return (
+              <>
+                <h3>Lien sélectionné</h3>
+                <p><strong>ID:</strong> {selectedLink.id}</p>
+                <p><strong>Source:</strong> {source.label} ({source.id})</p>
+                <p><strong>Cible:</strong> {target.label} ({target.id})</p>
+                <p><strong>Type:</strong> {selectedLink.type}</p>
+              </>
+            );
+          })()}
+        </div>
+      )}
+    
     </div>
   )
 }
