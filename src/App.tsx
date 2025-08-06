@@ -25,8 +25,9 @@ function App() {
     links: LinkType[]
   }>({ nodes: [], links: [] })
 
-  const [selectedNode, setSelectedNode] = useState<NodeType | null>(null)
-  const [selectedLink, setSelectedLink] = useState<LinkType | null>(null)
+  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+  const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
+  
 
   useEffect(() => {
     async function loadData() {
@@ -41,40 +42,51 @@ function App() {
       <ForceGraph3D
         graphData={graphData}
         backgroundColor="#222222"
-        linkWidth={2}
+        linkWidth={(link) => {
+          const l = link as LinkType;
+          const linkId = `${l.source}|${l.target}`;
+          return selectedLinks.has(linkId) ? 6 : 2;
+        }}
+        
         nodeColor={(node) => {
           const n = node as NodeType;
-          if (selectedNode && n.id === selectedNode.id) return 'orange';
-          return levelToColor(n.level ?? 0);
+          return selectedNodes.has(n.id)
+            ? 'orange'
+            : levelToColor(n.level ?? 0);
         }}        
         onNodeClick={(node) => {
-          setSelectedNode(node as NodeType)
-          console.log('Node sélectionné :', node)
+          const nodeId = (node as NodeType).id;
+          setSelectedNodes(prev => {
+            const newSet = new Set(prev);
+            newSet.has(nodeId) ? newSet.delete(nodeId) : newSet.add(nodeId);
+            return newSet;
+          });
         }}
         linkColor={(link) => {
           const l = link as LinkType;
-          if (
-            selectedLink &&
-            l.source === selectedLink.source &&
-            l.target === selectedLink.target
-          ) {
-            return 'orange';
-          }
-          return '#999';
-        }}
-        
+          const linkId = `${l.source}|${l.target}`;
+          return selectedLinks.has(linkId) ? 'orange' : '#999';
+        }}        
         onLinkClick={(link) => {
-          setSelectedLink(link as LinkType);
-          setSelectedNode(null); // désélectionne le node
-          console.log("Lien sélectionné :", link);
+          const l = link as LinkType;
+          const linkId = `${l.source}|${l.target}`;
+          setSelectedLinks(prev => {
+            const newSet = new Set(prev);
+            newSet.has(linkId) ? newSet.delete(linkId) : newSet.add(linkId);
+            return newSet;
+          });
         }}
       />
+      <button onClick={() => {
+        setSelectedNodes(new Set());
+        setSelectedLinks(new Set());
+      }}>Tout désélectionner</button>
       <InfoPanel
-        selectedNode={selectedNode}
-        selectedLink={selectedLink}
+        selectedNodes={selectedNodes}
+        selectedLinks={selectedLinks}
         onClose={() => {
-          setSelectedNode(null);
-          setSelectedLink(null);
+          setSelectedNodes(null);
+          setSelectedLinks(null);
         }}
       />
     </div>
