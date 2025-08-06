@@ -42,11 +42,27 @@ function App() {
         graphData={graphData}
         backgroundColor="#222222"
         linkWidth={2}
-        nodeColor={(node) => levelToColor((node as NodeType).level ?? 0)}
+        nodeColor={(node) => {
+          const n = node as NodeType;
+          if (selectedNode && n.id === selectedNode.id) return 'orange';
+          return levelToColor(n.level ?? 0);
+        }}        
         onNodeClick={(node) => {
           setSelectedNode(node as NodeType)
           console.log('Node sélectionné :', node)
         }}
+        linkColor={(link) => {
+          const l = link as LinkType;
+          if (
+            selectedLink &&
+            l.source === selectedLink.source &&
+            l.target === selectedLink.target
+          ) {
+            return 'orange';
+          }
+          return '#999';
+        }}
+        
         onLinkClick={(link) => {
           setSelectedLink(link as LinkType);
           setSelectedNode(null); // désélectionne le node
