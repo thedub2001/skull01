@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import ForceGraph3D from 'react-force-graph-3d'
 import { fetchGraphData } from './lib/db'
 import  {test} from './types/graph'
+import InfoPanel from "./components/InfoPanel";
 
 import type { NodeType, LinkType } from './types/graph'
 
@@ -51,59 +52,15 @@ function App() {
           setSelectedNode(null); // désélectionne le node
           console.log("Lien sélectionné :", link);
         }}
-        
       />
-      {(selectedNode || selectedLink) && (
-        <div
-          style={{
-            position: "absolute",
-            right: 0,
-            top: 0,
-            width: "300px",
-            height: "100%",
-            backgroundColor: "#333",
-            color: "#fff",
-            padding: "1rem",
-            overflowY: "auto",
-          }}
-        >
-          <button
-            onClick={() => {
-              setSelectedNode(null);
-              setSelectedLink(null);
-            }}
-            style={{ float: "right", background: "none", border: "none", color: "#fff" }}
-          >
-            ✕
-          </button>
-
-          {selectedNode && (
-            <>
-              <h3>Noeud sélectionné</h3>
-              <p><strong>ID:</strong> {selectedNode.id}</p>
-              <p><strong>Label:</strong> {selectedNode.label}</p>
-              <p><strong>Type:</strong> {selectedNode.type}</p>
-              <p><strong>Niveau:</strong> {selectedNode.level}</p>
-            </>
-          )}
-
-          {selectedLink && (() => {
-            const source = selectedLink.source as NodeType;
-            const target = selectedLink.target as NodeType;
-
-            return (
-              <>
-                <h3>Lien sélectionné</h3>
-                <p><strong>ID:</strong> {selectedLink.id}</p>
-                <p><strong>Source:</strong> {source.label} ({source.id})</p>
-                <p><strong>Cible:</strong> {target.label} ({target.id})</p>
-                <p><strong>Type:</strong> {selectedLink.type}</p>
-              </>
-            );
-          })()}
-        </div>
-      )}
-    
+      <InfoPanel
+        selectedNode={selectedNode}
+        selectedLink={selectedLink}
+        onClose={() => {
+          setSelectedNode(null);
+          setSelectedLink(null);
+        }}
+      />
     </div>
   )
 }

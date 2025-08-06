@@ -1,20 +1,19 @@
-export type NodeType = {
+export interface NodeType {
   id: string;
-  label?: string;
-  type?: string;
-  level?: number;
+  label: string;
+  type: string;
   x?: number;
   y?: number;
   fx?: number;
   fy?: number;
-};
+  level?: number;
+}
 
-  
-export type LinkType = {
-  id: string
-  source: string
-  target: string
-  type?: string
+export interface LinkType {
+  id: string;
+  source: NodeType | string;
+  target: NodeType | string;
+  type: string;
 }
 
 export const test = 'ok'
