@@ -164,6 +164,15 @@ Créer une application interactive en 3D pour modéliser des réseaux d'idées, 
 
 ---
 
+### 6. **Minimap 3D affichant la position et l’orientation de la caméra principale**
+
+* Afficher une vue simplifiée du graphe (noeuds + liens)
+* Marquer la position de la caméra principale par un curseur ou un icône
+* Mettre à jour en temps réel lors des déplacements de caméra
+* Permettre éventuellement un contrôle rapide de la caméra via la minimap (optionnel)
+
+---
+
 ## 🛰 Quelques projets et idées voisines pour s’inspirer
 
 | Projet / Outil                 | Idée à piller                                         |
