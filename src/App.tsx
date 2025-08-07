@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { fetchGraphData } from './lib/db';
 import InfoPanel from './components/InfoPanel';
 import useLabelSprite from './components/LabelSprite';
+import useCameraTracker from './hooks/useCameraTracker';
 
 import type { NodeType, LinkType } from './types/graph';
 
@@ -75,27 +76,7 @@ function App() {
   }, []);
 
   // État de la position actuelle de la caméra
-  const [cameraPos, setCameraPos] = useState({ x: 0, y: 0, z: 0 });
-
-  // Met à jour la position de la caméra en continu pour adapter les labels
-  useEffect(() => {
-    if (!ready || !fgRef.current) return;
-
-    let animationFrameId: number;
-    const fg = fgRef.current;
-
-    const tick = () => {
-      const camPos = fg.cameraPosition();
-      setCameraPos({ x: camPos.x, y: camPos.y, z: camPos.z });
-      animationFrameId = requestAnimationFrame(tick);
-    };
-
-    tick();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [ready]);
+  const cameraPos = useCameraTracker(fgRef);
 
   // Fonction fournie par le hook personnalisé, qui génère dynamiquement le label 3D du nœud
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
