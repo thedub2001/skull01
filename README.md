@@ -173,6 +173,15 @@ Créer une application interactive en 3D pour modéliser des réseaux d'idées, 
 
 ---
 
+### 7. **une même BDD pour des utilisateurs multiples**
+
+* Policies basées sur auth.uid().
+* multitenant (gestion centralisée, billing groupé, scalabilité)
+* requêter des données croisées
+* faire de l'admin
+
+---
+
 ## 🛰 Quelques projets et idées voisines pour s’inspirer
 
 | Projet / Outil                 | Idée à piller                                         |
