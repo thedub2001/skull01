@@ -1,0 +1,19 @@
+{
+  "name": "Vite React App",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "postCreateCommand": "bash -c 'if [ ! -d node_modules ] || [ \"$LAST_LOCK_HASH\" != \"$(sha256sum package-lock.json 2>/dev/null | cut -d\" \" -f1)\" ]; then npm install && echo \"$(sha256sum package-lock.json | cut -d\" \" -f1)\" > .last_lock_hash; fi'",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "postStartCommand": "npm run dev -- --host 0.0.0.0",
+  "remoteEnv": {
+    "LAST_LOCK_HASH": "${containerEnv:LAST_LOCK_HASH}"
+  },
+  "mounts": [
+    "type=cache,target=/workspace/.npm"
+  ]
+}
