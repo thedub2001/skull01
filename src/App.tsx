@@ -1,15 +1,16 @@
-// app.tsx
+import React, { useEffect, useRef, useState } from "react";
+import ForceGraph3D from "react-force-graph-3d";
+import { fetchGraphData, fetchVisualLinks } from "./lib/db";
+import InfoPanel from "./components/InfoPanel";
+import useLabelSprite from "./components/LabelSprite";
+import useCameraTracker from "./hooks/useCameraTracker";
+import {
+  addDynamicVisualLinks,
+  updateVisualLinks,
+} from "./utils/addDynamicVisualLinks";
 
-import React, { useEffect, useRef, useState } from 'react';
-import ForceGraph3D from 'react-force-graph-3d';
-import { fetchGraphData, fetchVisualLinks } from './lib/db';
-import InfoPanel from './components/InfoPanel';
-import useLabelSprite from './components/LabelSprite';
-import useCameraTracker from './hooks/useCameraTracker';
-import { addDynamicVisualLinks, updateVisualLinks } from './utils/addDynamicVisualLinks';
-
-import type { NodeType, LinkType } from './types/graph';
-import type { VisualLinkType } from './types/VisualLinkType';
+import type { NodeType, LinkType } from "./types/graph";
+import type { VisualLinkType } from "./types/VisualLinkType";
 
 const levelToColor = (level: number): string => {
   const baseHue = 60;
@@ -21,7 +22,10 @@ const levelToColor = (level: number): string => {
 };
 
 function App() {
-  const [graphData, setGraphData] = useState<{ nodes: NodeType[]; links: LinkType[] }>({ nodes: [], links: [] });
+  const [graphData, setGraphData] = useState<{
+    nodes: NodeType[];
+    links: LinkType[];
+  }>({ nodes: [], links: [] });
   const [visualLinks, setVisualLinks] = useState<VisualLinkType[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
@@ -29,11 +33,13 @@ function App() {
   const fgRef = useRef<any>(null);
 
   const getLinkId = (l: LinkType): string =>
-    `${typeof l.source === 'object' ? l.source.id : l.source}|${typeof l.target === 'object' ? l.target.id : l.target}`;
+    `${
+      typeof l.source === "object" ? l.source.id : l.source
+    }|${typeof l.target === "object" ? l.target.id : l.target}`;
 
   const generateTextLabel = (text: string): HTMLCanvasElement => {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d')!;
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d")!;
     const fontSize = 64;
 
     context.font = `${fontSize}px Sans-Serif`;
@@ -43,37 +49,86 @@ function App() {
     canvas.height = fontSize;
 
     context.font = `${fontSize}px Sans-Serif`;
-    context.fillStyle = 'white';
-    context.textBaseline = 'middle';
+    context.fillStyle = "white";
+    context.textBaseline = "middle";
     context.fillText(text, 0, fontSize / 2);
 
     return canvas;
+  };
+  const createChildNode = async (nodeId: string) => {
+    const parentNode = graphData.nodes.find((n) => n.id === nodeId);
+    if (!parentNode) {
+      console.error(`Node with ID ${nodeId} not found`);
+      return;
+    }
+  
+    // Exemple de logique pour ajouter un nœud enfant
+    const newNode: NodeType = {
+      id: `node-${Date.now()}`, // ID unique
+      label: `Enfant de ${parentNode.label}`,
+      type: "child",
+      level: (parentNode.level ?? 0) + 1,
+    };
+  
+    const newLink: LinkType = {
+      id: `link-${Date.now()}`, // ID unique
+      source: parentNode.id,
+      target: newNode.id,
+      type: "parent-child",
+    };
+  
+    setGraphData((prev) => ({
+      nodes: [...prev.nodes, newNode],
+      links: [...prev.links, newLink],
+    }));
+  
+    console.log(`Child node created for node ID: ${nodeId}`);
+  };
+  
+  const deleteNode = async (nodeId: string) => {
+    setGraphData((prev) => {
+      const nodes = prev.nodes.filter((n) => n.id !== nodeId);
+      const links = prev.links.filter(
+        (l) => l.source !== nodeId && l.target !== nodeId
+      );
+      return { nodes, links };
+    });
+  
+    console.log(`Node with ID ${nodeId} deleted`);
   };
 
   useEffect(() => {
     (async () => {
       const data = await fetchGraphData();
-      const cleanedNodes = data.nodes.filter(n => n && n.id !== undefined);
+      const cleanedNodes = data.nodes.filter((n) => n && n.id !== undefined);
       const cleanedLinks = data.links
         .filter(
-          l =>
+          (l) =>
             l &&
-            ((typeof l.source === 'string' && cleanedNodes.find(n => n.id === l.source)) ||
-              (typeof l.source === 'object' && l.source?.id && cleanedNodes.find(n => n.id === l.source.id))) &&
-            ((typeof l.target === 'string' && cleanedNodes.find(n => n.id === l.target)) ||
-              (typeof l.target === 'object' && l.target?.id && cleanedNodes.find(n => n.id === l.target.id)))
+            ((typeof l.source === "string" &&
+              cleanedNodes.find((n) => n.id === l.source)) ||
+              (typeof l.source === "object" &&
+                l.source?.id &&
+                cleanedNodes.find((n) => n.id === l.source.id))) &&
+            ((typeof l.target === "string" &&
+              cleanedNodes.find((n) => n.id === l.target)) ||
+              (typeof l.target === "object" &&
+                l.target?.id &&
+                cleanedNodes.find((n) => n.id === l.target.id)))
         )
-        .map(l => ({
+        .map((l) => ({
           ...l,
-          source: typeof l.source === 'object' ? l.source.id : l.source,
-          target: typeof l.target === 'object' ? l.target.id : l.target,
+          source: typeof l.source === "object" ? l.source.id : l.source,
+          target: typeof l.target === "object" ? l.target.id : l.target,
         }));
 
       setGraphData({ nodes: cleanedNodes, links: cleanedLinks });
 
       const vLinksRaw = await fetchVisualLinks();
       const filteredVisualLinks = vLinksRaw.filter(
-        vl => cleanedNodes.find(n => n.id === vl.source_id) && cleanedNodes.find(n => n.id === vl.target_id)
+        (vl) =>
+          cleanedNodes.find((n) => n.id === vl.source_id) &&
+          cleanedNodes.find((n) => n.id === vl.target_id)
       );
       setVisualLinks(filteredVisualLinks);
     })();
@@ -83,7 +138,7 @@ function App() {
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
 
   const onVisualLinkClick = (linkId: string) => {
-    setSelectedLinks(prev => {
+    setSelectedLinks((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(linkId)) newSet.delete(linkId);
       else newSet.add(linkId);
@@ -96,7 +151,13 @@ function App() {
 
     setTimeout(() => {
       if (!fgRef.current) return;
-      addDynamicVisualLinks(fgRef.current, visualLinks, graphData, () => selectedLinks, onVisualLinkClick);
+      addDynamicVisualLinks(
+        fgRef.current,
+        visualLinks,
+        graphData,
+        () => selectedLinks,
+        onVisualLinkClick
+      );
     }, 50);
   }, [visualLinks, selectedLinks, graphData]);
 
@@ -113,29 +174,37 @@ function App() {
   }, [graphData]);
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
+    <div style={{ width: "100vw", height: "100vh" }}>
       <ForceGraph3D
         ref={fgRef}
         graphData={graphData}
         backgroundColor="#222"
-        linkWidth={link => (selectedLinks.has(getLinkId(link as LinkType)) ? 6 : 2)}
+        linkWidth={(link) =>
+          selectedLinks.has(getLinkId(link as LinkType)) ? 6 : 2
+        }
         linkOpacity={1}
         nodeThreeObject={nodeThreeObject}
         nodeThreeObjectExtend
-        nodeColor={node => (selectedNodes.has((node as NodeType).id) ? 'orange' : levelToColor((node as NodeType).level ?? 0))}
-        onNodeClick={node => {
+        nodeColor={(node) =>
+          selectedNodes.has((node as NodeType).id)
+            ? "orange"
+            : levelToColor((node as NodeType).level ?? 0)
+        }
+        onNodeClick={(node) => {
           const nodeId = (node as NodeType).id;
-          setSelectedNodes(prev => {
+          setSelectedNodes((prev) => {
             const newSet = new Set(prev);
             if (newSet.has(nodeId)) newSet.delete(nodeId);
             else newSet.add(nodeId);
             return newSet;
           });
         }}
-        linkColor={link => (selectedLinks.has(getLinkId(link as LinkType)) ? 'orange' : '#aaa')}
-        onLinkClick={link => {
+        linkColor={(link) =>
+          selectedLinks.has(getLinkId(link as LinkType)) ? "orange" : "#aaa"
+        }
+        onLinkClick={(link) => {
           const id = getLinkId(link as LinkType);
-          setSelectedLinks(prev => {
+          setSelectedLinks((prev) => {
             const newSet = new Set(prev);
             if (newSet.has(id)) newSet.delete(id);
             else newSet.add(id);
@@ -145,14 +214,20 @@ function App() {
       />
 
       <InfoPanel
-        selectedNodes={graphData.nodes.filter(n => selectedNodes.has(n.id))}
-        selectedLinks={graphData.links.filter(l => selectedLinks.has(getLinkId(l)))}
+        selectedNodes={graphData.nodes.filter((n) =>
+          selectedNodes.has(n.id)
+        )}
+        selectedLinks={graphData.links.filter((l) =>
+          selectedLinks.has(getLinkId(l))
+        )}
         nodes={graphData.nodes}
         links={graphData.links}
         onClose={() => {
           setSelectedNodes(new Set());
           setSelectedLinks(new Set());
         }}
+        onCreateChildNode={createChildNode}
+        onDeleteNode={deleteNode}
       />
     </div>
   );
