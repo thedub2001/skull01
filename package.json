@@ -18,7 +18,8 @@
     "react-dom": "^19.1.0",
     "react-force-graph-3d": "^1.28.0",
     "tailwindcss": "^4.1.11",
-    "three": "^0.179.1"
+    "three": "^0.179.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

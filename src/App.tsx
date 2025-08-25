@@ -8,6 +8,8 @@ import {
   addDynamicVisualLinks,
   updateVisualLinks,
 } from "./utils/addDynamicVisualLinks";
+import { supabase } from "./lib/supabase";
+import { v4 as uuidv4 } from "uuid"; // Importation pour générer des UUID
 
 import type { NodeType, LinkType } from "./types/graph";
 import type { VisualLinkType } from "./types/VisualLinkType";
@@ -55,37 +57,61 @@ function App() {
 
     return canvas;
   };
+
   const createChildNode = async (nodeId: string) => {
     const parentNode = graphData.nodes.find((n) => n.id === nodeId);
     if (!parentNode) {
-      console.error(`Node with ID ${nodeId} not found`);
+      console.error(`[CREATE_CHILD_NODE] Node with ID ${nodeId} not found`);
       return;
     }
-  
-    // Exemple de logique pour ajouter un nœud enfant
+
+    // Création d'un nouveau nœud enfant avec UUID valide
     const newNode: NodeType = {
-      id: `node-${Date.now()}`, // ID unique
+      id: uuidv4(), // Génère un UUID valide
       label: `Enfant de ${parentNode.label}`,
       type: "child",
       level: (parentNode.level ?? 0) + 1,
     };
-  
+
     const newLink: LinkType = {
-      id: `link-${Date.now()}`, // ID unique
+      id: uuidv4(), // Génère un UUID valide
       source: parentNode.id,
       target: newNode.id,
       type: "parent-child",
     };
-  
+
+    console.log(`[CREATE_CHILD_NODE] New node to insert:`, newNode);
+    console.log(`[CREATE_CHILD_NODE] New link to insert:`, newLink);
+
+    // Mise à jour locale
     setGraphData((prev) => ({
       nodes: [...prev.nodes, newNode],
       links: [...prev.links, newLink],
     }));
-  
-    console.log(`Child node created for node ID: ${nodeId}`);
+
+    // Mise à jour dans la base de données
+    try {
+      const nodeResponse = await supabase.from("nodes").insert(newNode);
+      console.log("[CREATE_CHILD_NODE] Node insert response:", nodeResponse);
+
+      const linkResponse = await supabase.from("links").insert(newLink);
+      console.log("[CREATE_CHILD_NODE] Link insert response:", linkResponse);
+
+      if (nodeResponse.error || linkResponse.error) {
+        console.error(
+          "[CREATE_CHILD_NODE] Error inserting into the database:",
+          nodeResponse.error || linkResponse.error
+        );
+      } else {
+        console.log("[CREATE_CHILD_NODE] Child node successfully added to the database");
+      }
+    } catch (error) {
+      console.error("[CREATE_CHILD_NODE] Unexpected error:", error);
+    }
   };
-  
+
   const deleteNode = async (nodeId: string) => {
+    console.log(`[DELETE_NODE] Deleting node with ID: ${nodeId}`);
     setGraphData((prev) => {
       const nodes = prev.nodes.filter((n) => n.id !== nodeId);
       const links = prev.links.filter(
@@ -93,9 +119,10 @@ function App() {
       );
       return { nodes, links };
     });
-  
-    console.log(`Node with ID ${nodeId} deleted`);
+
+    console.log(`[DELETE_NODE] Node with ID ${nodeId} deleted locally`);
   };
+
 
   useEffect(() => {
     (async () => {
