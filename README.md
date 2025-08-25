@@ -173,7 +173,7 @@ Créer une application interactive en 3D pour modéliser des réseaux d'idées, 
 
 ---
 
-### 7. **une même BDD pour des utilisateurs multiples**
+### 07. **une même BDD pour des utilisateurs multiples**
 
 * Policies basées sur auth.uid().
 * multitenant (gestion centralisée, billing groupé, scalabilité)
