@@ -42,8 +42,17 @@ export function addDynamicVisualLinks(
   visualLinkLines = [];
 
   visualLinks.forEach(link => {
-    const sourceNode = graphData.nodes.find(n => n.id === link.source_id);
-    const targetNode = graphData.nodes.find(n => n.id === link.target_id);
+    const sourceNode = graphData.nodes.find(n => n.id === link.source);
+    const targetNode = graphData.nodes.find(n => n.id === link.target);
+
+    console.log("[visualLink][check]", {
+      linkId: link.id,
+      source: link.source,
+      target: link.target,
+      foundSource: !!sourceNode,
+      foundTarget: !!targetNode,
+    });
+
     if (!sourceNode || !targetNode) return;
 
     const sourcePos = new THREE.Vector3(sourceNode.x, sourceNode.y, sourceNode.z);
@@ -58,7 +67,7 @@ export function addDynamicVisualLinks(
     line.userData = { isVisualLink: true, id: link.id };
 
     scene.add(line);
-    visualLinkLines.push({ line, sourceId: link.source_id, targetId: link.target_id });
+    visualLinkLines.push({ line, sourceId: link.source, targetId: link.target });
   });
 }
 

@@ -1,64 +1,69 @@
-import { useState, useEffect } from 'react';
-import type { VisualLinkType } from '@/types/visualLinkTypes';
-import { supabase } from '@/lib/supabaseClient';
+import { useState, useCallback  } from 'react';
+import type { VisualLinkType } from '../types/VisualLinkType';
+import { supabase } from '../lib/supabase';
 
-export function useVisualLinks() {
-  const [links, setLinks] = useState<VisualLinkType[]>([]);
-  const [loading, setLoading] = useState(true);
+/**
+ * Hook custom pour gérer les visualLinks
+ */
+ export function useVisualLinks() {
+  const [visualLinks, setVisualLinks] = useState<VisualLinkType[]>([]);
 
-  useEffect(() => {
-    fetchLinks();
+  /**
+   * Récupère tous les visualLinks depuis Supabase
+   */
+  const fetchVisualLinks = useCallback(async () => {
+    console.log("[data][visualLinks] fetching...");
+
+    const { data, error } = await supabase.from("visual_links").select("*");
+
+    if (error) {
+      console.error("[data][visualLinks] error:", error);
+      return;
+    }
+
+    setVisualLinks(data as VisualLinkType[]);
+    console.log("[data][visualLinks] success",data)
   }, []);
 
-  async function fetchLinks() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('visual_links')
-      .select('*')
-      .order('created_at', { ascending: false });
+  /**
+   * Ajoute un visualLink en base
+   */
+  const addVisualLink = useCallback(
+    async (source: string, target: string, type: string) => {
+      console.log("[data][visualLinks] adding:", { source, target, type });
+      const { data, error } = await supabase
+        .from("visual_links")
+        .insert([{ source, target, type }])
+        .select()
+        .single();
+      if (error) {
+        console.error("[data][visualLinks] add error:", error);
+        return null;
+      }
+      setVisualLinks((prev) => [...prev, data as VisualLinkType]);
+      return data as VisualLinkType;
+    },
+    []
+  );
 
+  /**
+   * Supprime un visualLink en base
+   */
+  const removeVisualLink = useCallback(async (id: string) => {
+    console.log("[data][visualLinks] removing:", id);
+    const { error } = await supabase.from("visual_links").delete().eq("id", id);
     if (error) {
-      console.error('[data] error fetching visual_links:', error);
-    } else {
-      setLinks(data || []);
+      console.error("[data][visualLinks] remove error:", error);
+      return false;
     }
-
-    setLoading(false);
-  }
-
-  async function addVisualLink(link: Omit<VisualLinkType, 'id' | 'created_at'>) {
-    const { sourceId, targetId, type, metadata } = link;
-
-    const { data, error } = await supabase
-      .from('visual_links')
-      .insert([{ sourceId, targetId, type, metadata }])
-      .select();
-
-    if (error) {
-      console.error('[data] error inserting visual_link:', error);
-    } else if (data) {
-      setLinks(prev => [...data, ...prev]);
-    }
-  }
-
-  async function deleteVisualLink(id: string) {
-    const { error } = await supabase
-      .from('visual_links')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('[data] error deleting visual_link:', error);
-    } else {
-      setLinks(prev => prev.filter(link => link.id !== id));
-    }
-  }
+    setVisualLinks((prev) => prev.filter((link) => link.id !== id));
+    return true;
+  }, []);
 
   return {
-    links,
-    loading,
-    fetchLinks,
+    visualLinks,
+    fetchVisualLinks,
     addVisualLink,
-    deleteVisualLink,
+    removeVisualLink,
   };
 }
