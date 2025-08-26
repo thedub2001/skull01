@@ -6,6 +6,7 @@ import useCameraTracker from "./hooks/useCameraTracker";
 import { addDynamicVisualLinks, updateVisualLinks } from "./utils/addDynamicVisualLinks";
 import { useNodes } from "./hooks/useNodes";
 import { useLinks } from "./hooks/useLinks";
+import { useGraphSelection } from "./hooks/useGraphSelection";
 
 import type { NodeType, LinkType } from "./types/graph";
 import { useVisualLinks } from "./hooks/useVisualLinks";
@@ -27,16 +28,21 @@ function App() {
   const { nodes, fetchGraphData, addNode, deleteNode } = useNodes();
   const { links, fetchLinks, addLink, deleteLink } = useLinks();
   const { visualLinks, fetchVisualLinks } = useVisualLinks();
+  const {
+    selectedNodes,
+    selectedLinks,
+    setSelectedNodes,
+    setSelectedLinks,
+    getLinkId,
+    onNodeClick,
+    onLinkClick,
+  } = useGraphSelection();
 
-  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
-  const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
 
   const cameraPos = useCameraTracker(fgRef);
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
 
   // --- Helpers ---
-  const getLinkId = (l: LinkType): string =>
-    `${typeof l.source === "object" ? l.source.id : l.source}|${typeof l.target === "object" ? l.target.id : l.target}`;
 
   function generateTextLabel(text: string): HTMLCanvasElement {
     const canvas = document.createElement("canvas");
@@ -56,29 +62,6 @@ function App() {
 
     return canvas;
   }
-
-  // --- Node & Link selection ---
-  const onNodeClick = (node: NodeType) => {
-    const nodeId = node.id;
-    setSelectedNodes(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(nodeId)) newSet.delete(nodeId);
-      else newSet.add(nodeId);
-      console.log("[graph][selectNodes]", Array.from(newSet));
-      return newSet;
-    });
-  };
-
-  const onLinkClick = (link: LinkType) => {
-    const id = getLinkId(link);
-    setSelectedLinks(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) newSet.delete(id);
-      else newSet.add(id);
-      console.log("[graph][selectLinks]", Array.from(newSet));
-      return newSet;
-    });
-  };
 
   // --- Fetch initial data ---
   useEffect(() => {
