@@ -21,12 +21,13 @@ export function useVisualLinksRenderer({
   setSelectedLinks,
   getLinkId,
 }: Props) {
-  // Ajout initial des visual links
+  // --- Initialisation ---
   useEffect(() => {
     if (!fgRef.current || visualLinks.length === 0) return;
 
     const timer = setTimeout(() => {
       if (!fgRef.current) return;
+
       addDynamicVisualLinks(
         fgRef.current,
         visualLinks,
@@ -35,8 +36,7 @@ export function useVisualLinksRenderer({
         (linkId) => {
           setSelectedLinks(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(linkId)) newSet.delete(linkId);
-            else newSet.add(linkId);
+            newSet.has(linkId) ? newSet.delete(linkId) : newSet.add(linkId);
             console.log("[graph][selectVisualLink]", Array.from(newSet));
             return newSet;
           });
@@ -47,7 +47,7 @@ export function useVisualLinksRenderer({
     return () => clearTimeout(timer);
   }, [visualLinks, fgRef, graphData, selectedLinks, setSelectedLinks]);
 
-  // Mise à jour continue des visual links
+  // --- Animation continue ---
   useEffect(() => {
     let frameId: number;
 

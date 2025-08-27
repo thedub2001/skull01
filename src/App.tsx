@@ -1,26 +1,27 @@
-import React, { useEffect, useRef, useState } from "react";
-import ForceGraph3D from "react-force-graph-3d";
+import React from "react";
 import InfoPanel from "./components/InfoPanel";
-import useLabelSprite from "./components/LabelSprite";
-import useCameraTracker from "./hooks/useCameraTracker";
+import GraphWrapper from "./components/GraphWrapper";
+
 import { useNodes } from "./hooks/useNodes";
 import { useLinks } from "./hooks/useLinks";
 import { useGraphSelection } from "./hooks/useGraphSelection";
 import { useVisualLinks } from "./hooks/useVisualLinks";
-import { useVisualLinksRenderer } from "./hooks/useVisualLinksRenderer"
 import { useGraphDataSync } from "./hooks/useGraphDataSync";
-import { useGraphInitialFetch } from "./hooks/useGraphInitialFetch"
+import { useGraphInitialFetch } from "./hooks/useGraphInitialFetch";
+import useCameraTracker from "./hooks/useCameraTracker";
 import { useNodeLabelGenerator } from "./hooks/useNodeLabelGenerator";
 import { addChildNodeHandler, deleteNodeHandler } from "./utils/nodeHandlers";
 import { levelToColor } from "./utils/color";
+import useLabelSprite from "./components/LabelSprite";
 
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import type { NodeType, LinkType } from "./types/graph";
 
 function App() {
-  const fgRef = useRef<ForceGraphMethods<NodeType, LinkType> | null>(null);
+  // --- Ref partagé ---
+  const fgRef = React.useRef<ForceGraphMethods<NodeType, LinkType> | null>(null);
 
-  // --- Hooks ---
+  // --- Hooks de données ---
   const { nodes, fetchGraphData, addNode, deleteNode } = useNodes();
   const { links, fetchLinks, addLink, deleteLink } = useLinks();
   const { visualLinks, fetchVisualLinks } = useVisualLinks();
@@ -38,47 +39,29 @@ function App() {
 
   const graphData = useGraphDataSync(nodes, links);
 
+  // --- Camera tracker ---
   const cameraPos = useCameraTracker(fgRef);
 
   // --- Helpers ---
   const generateTextLabel = useNodeLabelGenerator();
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
 
-  // --- Fetch initial data (externalized) ---
+  // --- Fetch initial data (externalisé) ---
   useGraphInitialFetch(fetchGraphData, fetchLinks, fetchVisualLinks);
-
-  // --- Visual links rendering (externalized) ---
-  useVisualLinksRenderer({
-    fgRef,
-    graphData,
-    visualLinks,
-    selectedLinks,
-    setSelectedLinks,
-    getLinkId,
-  });
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
-      <ForceGraph3D
-        ref={fgRef}
+      <GraphWrapper
+        fgRef={fgRef}
         graphData={graphData}
-        backgroundColor="#222"
-        linkWidth={(link) =>
-          selectedLinks.has(getLinkId(link as LinkType)) ? 6 : 2
-        }
-        linkOpacity={1}
+        selectedNodes={selectedNodes}
+        selectedLinks={selectedLinks}
+        setSelectedLinks={setSelectedLinks}
+        getLinkId={getLinkId}
         nodeThreeObject={nodeThreeObject}
-        nodeThreeObjectExtend
-        nodeColor={(node) =>
-          selectedNodes.has((node as NodeType).id)
-            ? "orange"
-            : levelToColor((node as NodeType).level ?? 0)
-        }
         onNodeClick={onNodeClick}
-        linkColor={(link) =>
-          selectedLinks.has(getLinkId(link as LinkType)) ? "orange" : "#aaa"
-        }
         onLinkClick={onLinkClick}
+        visualLinks={visualLinks}
       />
 
       <InfoPanel
