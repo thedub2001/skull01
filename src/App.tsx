@@ -37,7 +37,10 @@ function App() {
     onNodeClick,
     onLinkClick,
   } = useGraphSelection();
-
+  const [graphData, setGraphData] = useState<{ nodes: NodeType[]; links: LinkType[] }>({
+    nodes: [],
+    links: [],
+  });
 
   const cameraPos = useCameraTracker(fgRef);
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
@@ -62,6 +65,12 @@ function App() {
 
     return canvas;
   }
+  useEffect(() => {
+    setGraphData(prev => {
+      if (prev.nodes === nodes && prev.links === links) return prev;
+      return { nodes, links };
+    });
+  }, [nodes, links]);
 
   // --- Fetch initial data ---
   useEffect(() => {
@@ -82,6 +91,7 @@ function App() {
       addDynamicVisualLinks(
         fgRef.current,
         visualLinks,
+        graphData,
         { nodes },
         () => selectedLinks,
         (linkId) => {
@@ -101,7 +111,7 @@ function App() {
     let frameId: number;
 
     const animate = () => {
-      if (fgRef.current) updateVisualLinks(fgRef.current, { nodes, links });
+      if (fgRef.current) updateVisualLinks(fgRef.current, graphData);
       frameId = requestAnimationFrame(animate);
     };
     animate();
@@ -113,7 +123,7 @@ function App() {
     <div style={{ width: "100vw", height: "100vh" }}>
       <ForceGraph3D
         ref={fgRef}
-        graphData={{ nodes, links }}
+        graphData={graphData}
         backgroundColor="#222"
         linkWidth={(link) => selectedLinks.has(getLinkId(link as LinkType)) ? 6 : 2}
         linkOpacity={1}

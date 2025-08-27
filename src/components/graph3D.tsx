@@ -4,6 +4,11 @@ import ForceGraph3D from "react-force-graph-3d";
 import { addDynamicVisualLinks, updateVisualLinks } from "../utils/addDynamicVisualLinks";
 import type { NodeType, LinkType } from "../types/graph";
 import type { VisualLinkType } from "../types/VisualLinkType";
+import { useNodes } from "../hooks/useNodes";
+import { useLinks } from "../hooks/useLinks";
+const { nodes } = useNodes();
+const { links } = useLinks();
+const graphData = { nodes, links };
 
 type Props = {
   fgRef: React.RefObject<any>;
@@ -74,7 +79,7 @@ export default function Graph3D({
   return (
     <ForceGraph3D
       ref={fgRef}
-      graphData={{ nodes, links }}
+      graphData={graphData}
       backgroundColor="#222"
       linkWidth={link => selectedLinks.has(getLinkId(link)) ? 6 : 2}
       linkOpacity={1}
