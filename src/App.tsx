@@ -9,6 +9,7 @@ import { useGraphSelection } from "./hooks/useGraphSelection";
 import { useVisualLinks } from "./hooks/useVisualLinks";
 import { useVisualLinksRenderer } from "./hooks/useVisualLinksRenderer"
 import { useGraphDataSync } from "./hooks/useGraphDataSync";
+import { useGraphInitialFetch } from "./hooks/useGraphInitialFetch"
 
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import type { NodeType, LinkType } from "./types/graph";
@@ -65,14 +66,7 @@ function App() {
   }
 
   // --- Fetch initial data ---
-  useEffect(() => {
-    (async () => {
-      console.log("[graph][fetch] Initial fetch nodes & links");
-      await fetchGraphData();
-      await fetchLinks();
-      await fetchVisualLinks();
-    })();
-  }, [fetchGraphData, fetchLinks, fetchVisualLinks]);
+  useGraphInitialFetch(fetchGraphData, fetchLinks, fetchVisualLinks);
 
   // --- Visual links rendering (externalized) ---
   useVisualLinksRenderer({
