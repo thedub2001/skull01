@@ -1,48 +1,28 @@
-/**
- * ========================
- * Types pour la Base de Données (Supabase)
- * ========================
- * Ces types reflètent EXACTEMENT la structure SQL des tables.
- * Ils sont utilisés uniquement pour les opérations avec Supabase.
- */
+// types/graph.ts
+import type { NodeObject, LinkObject } from "react-force-graph-3d";
 
- export interface DBNode {
-  id: string;            // uuid
-  label: string;         // text NOT NULL
-  type: string | null;   // text
-  x?: number | null;     // real
-  y?: number | null;     // real
-  fx?: number | null;    // real
-  fy?: number | null;    // real
-  level?: number | null; // integer
+// --- Supabase types ---
+export interface DBNode {
+  id: string;
+  label: string;
+  level?: number;
 }
 
 export interface DBLink {
-  id: string;             // uuid
-  source: string;         // uuid NOT NULL
-  target: string;          // uuid
-  type: string | null;    // text
-}
-
-/**
- * ========================
- * Types pour l'Application (React + 3d-force-graph)
- * ========================
- * Ces types sont dérivés des DB-types mais adaptés à la visualisation :
- * - `source` et `target` peuvent être soit des UUID (string),
- *   soit des objets NodeType complets.
- */
-
-export interface NodeType extends DBNode {}
-
-export interface LinkType {
   id: string;
-  source: string | NodeType;
-  target: string | NodeType;
-  type?: string | null;
+  source: string;
+  target: string;
+  type?: string;
 }
 
-/**
- * utilitaire de debug
- */
-export const test = "ok";
+// --- Types pour l'app, compatibles ForceGraph3D ---
+export type NodeType = NodeObject<{
+  id: string;
+  label: string;
+  level?: number;
+}>;
+
+export type LinkType = LinkObject<NodeType, DBLink> & {
+  id: string;
+  type?: string;
+};

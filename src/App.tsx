@@ -7,7 +7,10 @@ import { addDynamicVisualLinks, updateVisualLinks } from "./utils/addDynamicVisu
 import { useNodes } from "./hooks/useNodes";
 import { useLinks } from "./hooks/useLinks";
 import { useGraphSelection } from "./hooks/useGraphSelection";
+import type { ForceGraphMethods } from "react-force-graph-3d";
 
+
+import type { NodeObject, LinkObject } from "react-force-graph-3d";
 import type { NodeType, LinkType } from "./types/graph";
 import { useVisualLinks } from "./hooks/useVisualLinks";
 import type { VisualLinkType } from "./types/VisualLinkType";
@@ -22,7 +25,8 @@ const levelToColor = (level: number): string => {
 };
 
 function App() {
-  const fgRef = useRef<any>(null);
+  const fgRef = useRef<ForceGraphMethods<NodeType, LinkType> | null>(null);
+
 
   // --- Hooks ---
   const { nodes, fetchGraphData, addNode, deleteNode } = useNodes();
@@ -37,6 +41,7 @@ function App() {
     onNodeClick,
     onLinkClick,
   } = useGraphSelection();
+
   const [graphData, setGraphData] = useState<{ nodes: NodeType[]; links: LinkType[] }>({
     nodes: [],
     links: [],
