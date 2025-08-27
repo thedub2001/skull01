@@ -12,18 +12,10 @@ import { useGraphDataSync } from "./hooks/useGraphDataSync";
 import { useGraphInitialFetch } from "./hooks/useGraphInitialFetch"
 import { useNodeLabelGenerator } from "./hooks/useNodeLabelGenerator";
 import { addChildNodeHandler, deleteNodeHandler } from "./utils/nodeHandlers";
+import { levelToColor } from "./utils/color";
 
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import type { NodeType, LinkType } from "./types/graph";
-
-const levelToColor = (level: number): string => {
-  const baseHue = 60;
-  const hueStep = 47;
-  const hue = (baseHue + level * hueStep) % 360;
-  const saturation = 80;
-  const lightness = level % 2 === 0 ? 45 : 65;
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-};
 
 function App() {
   const fgRef = useRef<ForceGraphMethods<NodeType, LinkType> | null>(null);
