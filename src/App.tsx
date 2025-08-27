@@ -8,6 +8,7 @@ import { useLinks } from "./hooks/useLinks";
 import { useGraphSelection } from "./hooks/useGraphSelection";
 import { useVisualLinks } from "./hooks/useVisualLinks";
 import { useVisualLinksRenderer } from "./hooks/useVisualLinksRenderer"
+import { useGraphDataSync } from "./hooks/useGraphDataSync";
 
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import type { NodeType, LinkType } from "./types/graph";
@@ -38,10 +39,7 @@ function App() {
     onLinkClick,
   } = useGraphSelection();
 
-  const [graphData, setGraphData] = useState<{ nodes: NodeType[]; links: LinkType[] }>({
-    nodes: [],
-    links: [],
-  });
+  const graphData = useGraphDataSync(nodes, links);
 
   const cameraPos = useCameraTracker(fgRef);
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
@@ -65,14 +63,6 @@ function App() {
 
     return canvas;
   }
-
-  // --- Sync graphData with nodes & links ---
-  useEffect(() => {
-    setGraphData(prev => {
-      if (prev.nodes === nodes && prev.links === links) return prev;
-      return { nodes, links };
-    });
-  }, [nodes, links]);
 
   // --- Fetch initial data ---
   useEffect(() => {
