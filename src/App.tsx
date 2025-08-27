@@ -27,12 +27,14 @@ function App() {
   const {
     selectedNodes,
     selectedLinks,
+    selectedNodeObjects,
+    selectedLinkObjects,
     setSelectedNodes,
     setSelectedLinks,
     getLinkId,
     onNodeClick,
     onLinkClick,
-  } = useGraphSelection();
+  } = useGraphSelection(nodes, links);
 
   const graphData = useGraphDataSync(nodes, links);
 
@@ -80,8 +82,8 @@ function App() {
       />
 
       <InfoPanel
-        selectedNodes={nodes.filter((n) => selectedNodes.has(n.id))}
-        selectedLinks={links.filter((l) => selectedLinks.has(getLinkId(l)))}
+        selectedNodes={selectedNodeObjects}
+        selectedLinks={selectedLinkObjects}
         nodes={nodes}
         links={links}
         onClose={() => {

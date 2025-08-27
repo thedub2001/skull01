@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { NodeType, LinkType } from "../types/graph";
 
-export function useGraphSelection() {
+export function useGraphSelection(nodes: NodeType[], links: LinkType[]) {
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
 
@@ -28,9 +28,22 @@ export function useGraphSelection() {
     });
   };
 
+  // --- objets sélectionnés, calculés automatiquement ---
+  const selectedNodeObjects = useMemo(
+    () => nodes.filter(n => selectedNodes.has(n.id)),
+    [nodes, selectedNodes]
+  );
+
+  const selectedLinkObjects = useMemo(
+    () => links.filter(l => selectedLinks.has(getLinkId(l))),
+    [links, selectedLinks]
+  );
+
   return {
     selectedNodes,
     selectedLinks,
+    selectedNodeObjects,
+    selectedLinkObjects,
     setSelectedNodes,
     setSelectedLinks,
     getLinkId,
