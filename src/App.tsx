@@ -10,6 +10,7 @@ import { useVisualLinks } from "./hooks/useVisualLinks";
 import { useVisualLinksRenderer } from "./hooks/useVisualLinksRenderer"
 import { useGraphDataSync } from "./hooks/useGraphDataSync";
 import { useGraphInitialFetch } from "./hooks/useGraphInitialFetch"
+import { useNodeLabelGenerator } from "./hooks/useNodeLabelGenerator";
 
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import type { NodeType, LinkType } from "./types/graph";
@@ -43,29 +44,12 @@ function App() {
   const graphData = useGraphDataSync(nodes, links);
 
   const cameraPos = useCameraTracker(fgRef);
-  const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
 
   // --- Helpers ---
-  function generateTextLabel(text: string): HTMLCanvasElement {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d")!;
-    const fontSize = 64;
+  const generateTextLabel = useNodeLabelGenerator();
+  const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
 
-    ctx.font = `${fontSize}px Sans-Serif`;
-    const width = ctx.measureText(text).width;
-
-    canvas.width = width;
-    canvas.height = fontSize;
-
-    ctx.font = `${fontSize}px Sans-Serif`;
-    ctx.fillStyle = "white";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, 0, fontSize / 2);
-
-    return canvas;
-  }
-
-  // --- Fetch initial data ---
+  // --- Fetch initial data (externalized) ---
   useGraphInitialFetch(fetchGraphData, fetchLinks, fetchVisualLinks);
 
   // --- Visual links rendering (externalized) ---
