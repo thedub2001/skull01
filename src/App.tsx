@@ -3,17 +3,14 @@ import ForceGraph3D from "react-force-graph-3d";
 import InfoPanel from "./components/InfoPanel";
 import useLabelSprite from "./components/LabelSprite";
 import useCameraTracker from "./hooks/useCameraTracker";
-import { addDynamicVisualLinks, updateVisualLinks } from "./utils/addDynamicVisualLinks";
 import { useNodes } from "./hooks/useNodes";
 import { useLinks } from "./hooks/useLinks";
 import { useGraphSelection } from "./hooks/useGraphSelection";
-import type { ForceGraphMethods } from "react-force-graph-3d";
-
-
-import type { NodeObject, LinkObject } from "react-force-graph-3d";
-import type { NodeType, LinkType } from "./types/graph";
 import { useVisualLinks } from "./hooks/useVisualLinks";
-import type { VisualLinkType } from "./types/VisualLinkType";
+import { useVisualLinksRenderer } from "./hooks/useVisualLinksRenderer"
+
+import type { ForceGraphMethods } from "react-force-graph-3d";
+import type { NodeType, LinkType } from "./types/graph";
 
 const levelToColor = (level: number): string => {
   const baseHue = 60;
@@ -26,7 +23,6 @@ const levelToColor = (level: number): string => {
 
 function App() {
   const fgRef = useRef<ForceGraphMethods<NodeType, LinkType> | null>(null);
-
 
   // --- Hooks ---
   const { nodes, fetchGraphData, addNode, deleteNode } = useNodes();
@@ -51,7 +47,6 @@ function App() {
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
 
   // --- Helpers ---
-
   function generateTextLabel(text: string): HTMLCanvasElement {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d")!;
@@ -70,6 +65,8 @@ function App() {
 
     return canvas;
   }
+
+  // --- Sync graphData with nodes & links ---
   useEffect(() => {
     setGraphData(prev => {
       if (prev.nodes === nodes && prev.links === links) return prev;
@@ -87,42 +84,15 @@ function App() {
     })();
   }, [fetchGraphData, fetchLinks, fetchVisualLinks]);
 
-  // --- Visual links rendering ---
-  useEffect(() => {
-    if (!fgRef.current || visualLinks.length === 0) return;
-
-    setTimeout(() => {
-      if (!fgRef.current) return;
-      addDynamicVisualLinks(
-        fgRef.current,
-        visualLinks,
-        graphData,
-        { nodes },
-        () => selectedLinks,
-        (linkId) => {
-          setSelectedLinks(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(linkId)) newSet.delete(linkId);
-            else newSet.add(linkId);
-            console.log("[graph][selectVisualLink]", Array.from(newSet));
-            return newSet;
-          });
-        }
-      );
-    }, 50);
-  }, [visualLinks]);
-
-  useEffect(() => {
-    let frameId: number;
-
-    const animate = () => {
-      if (fgRef.current) updateVisualLinks(fgRef.current, graphData);
-      frameId = requestAnimationFrame(animate);
-    };
-    animate();
-
-    return () => cancelAnimationFrame(frameId);
-  }, [nodes, links]);
+  // --- Visual links rendering (externalized) ---
+  useVisualLinksRenderer({
+    fgRef,
+    graphData,
+    visualLinks,
+    selectedLinks,
+    setSelectedLinks,
+    getLinkId,
+  });
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
@@ -130,7 +100,9 @@ function App() {
         ref={fgRef}
         graphData={graphData}
         backgroundColor="#222"
-        linkWidth={(link) => selectedLinks.has(getLinkId(link as LinkType)) ? 6 : 2}
+        linkWidth={(link) =>
+          selectedLinks.has(getLinkId(link as LinkType)) ? 6 : 2
+        }
         linkOpacity={1}
         nodeThreeObject={nodeThreeObject}
         nodeThreeObjectExtend
@@ -140,13 +112,15 @@ function App() {
             : levelToColor((node as NodeType).level ?? 0)
         }
         onNodeClick={onNodeClick}
-        linkColor={(link) => selectedLinks.has(getLinkId(link as LinkType)) ? "orange" : "#aaa"}
+        linkColor={(link) =>
+          selectedLinks.has(getLinkId(link as LinkType)) ? "orange" : "#aaa"
+        }
         onLinkClick={onLinkClick}
       />
 
       <InfoPanel
-        selectedNodes={nodes.filter(n => selectedNodes.has(n.id))}
-        selectedLinks={links.filter(l => selectedLinks.has(getLinkId(l)))}
+        selectedNodes={nodes.filter((n) => selectedNodes.has(n.id))}
+        selectedLinks={links.filter((l) => selectedLinks.has(getLinkId(l)))}
         nodes={nodes}
         links={links}
         onClose={() => {
@@ -156,29 +130,30 @@ function App() {
         }}
         onCreateChildNode={async (parentId) => {
           console.log("[graph][addChildNode] parentId:", parentId);
-        
+
           // Chercher le parent dans les nodes
           const parentNode = nodes.find((n) => n.id === parentId);
           if (!parentNode) {
             console.error("[graph][addChildNode] parent node not found:", parentId);
             return;
           }
-        
+
           console.log("[graph][addChildNode] parent label:", parentNode.label);
-        
+
           // Nouveau nœud avec un label basé sur le parent
           const newNode = await addNode(`Enfant de ${parentNode.label}`, "child");
           if (!newNode) return;
-        
+
           // Création du lien parent-enfant
           await addLink(parentId, newNode.id, "parent-child");
         }}
-        
         onDeleteNode={async (nodeId) => {
           console.log("[graph][deleteNode]", nodeId);
 
           // Supprime les liens associés d’abord
-          const relatedLinks = links.filter(l => l.source === nodeId || l.target === nodeId);
+          const relatedLinks = links.filter(
+            (l) => l.source === nodeId || l.target === nodeId
+          );
           for (const l of relatedLinks) {
             await deleteLink(l.id);
           }
