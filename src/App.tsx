@@ -11,6 +11,7 @@ import { useVisualLinksRenderer } from "./hooks/useVisualLinksRenderer"
 import { useGraphDataSync } from "./hooks/useGraphDataSync";
 import { useGraphInitialFetch } from "./hooks/useGraphInitialFetch"
 import { useNodeLabelGenerator } from "./hooks/useNodeLabelGenerator";
+import { addChildNodeHandler, deleteNodeHandler } from "./utils/nodeHandlers";
 
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import type { NodeType, LinkType } from "./types/graph";
@@ -97,37 +98,10 @@ function App() {
           console.log("[graph][infoPanel] Closed");
         }}
         onCreateChildNode={async (parentId) => {
-          console.log("[graph][addChildNode] parentId:", parentId);
-
-          // Chercher le parent dans les nodes
-          const parentNode = nodes.find((n) => n.id === parentId);
-          if (!parentNode) {
-            console.error("[graph][addChildNode] parent node not found:", parentId);
-            return;
-          }
-
-          console.log("[graph][addChildNode] parent label:", parentNode.label);
-
-          // Nouveau nœud avec un label basé sur le parent
-          const newNode = await addNode(`Enfant de ${parentNode.label}`, "child");
-          if (!newNode) return;
-
-          // Création du lien parent-enfant
-          await addLink(parentId, newNode.id, "parent-child");
+          await addChildNodeHandler(parentId, nodes, addNode, addLink);
         }}
         onDeleteNode={async (nodeId) => {
-          console.log("[graph][deleteNode]", nodeId);
-
-          // Supprime les liens associés d’abord
-          const relatedLinks = links.filter(
-            (l) => l.source === nodeId || l.target === nodeId
-          );
-          for (const l of relatedLinks) {
-            await deleteLink(l.id);
-          }
-
-          // Supprime le nœud
-          await deleteNode(nodeId);
+          await deleteNodeHandler(nodeId, nodes, links, deleteNode, deleteLink);
         }}
       />
     </div>
