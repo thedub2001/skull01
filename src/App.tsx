@@ -11,7 +11,7 @@ import { useGraphInitialFetch } from "./hooks/useGraphInitialFetch";
 import useCameraTracker from "./hooks/useCameraTracker";
 import { useNodeLabelGenerator } from "./hooks/useNodeLabelGenerator";
 import { addChildNodeHandler, deleteNodeHandler } from "./utils/nodeHandlers";
-import { levelToColor } from "./utils/color";
+import { levelToColor } from "./utils/color"; // to do : delete
 import useLabelSprite from "./components/LabelSprite";
 
 import type { ForceGraphMethods } from "react-force-graph-3d";

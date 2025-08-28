@@ -32,21 +32,36 @@ export function useNodes() {
   }, [mapDBNodeToApp]);
 
   // Ajout d’un nœud
-  const addNode = useCallback(async (label: string, type: string | null = null): Promise<NodeType | null> => {
+// hooks/useNodes.ts
+
+const addNode = useCallback(
+  async (label: string, type: string | null = null, level?: number): Promise<NodeType | null> => {
     const newId = uuidv4();
+
+    // sécurité optionnelle côté client
+    if (nodes.some(n => n.id === newId)) {
+      console.warn("[useNodes][addNode] UUID collision detected, regenerating...");
+      return await addNode(label, type, level); // rare mais possible
+    }
+
     const { data, error } = await supabase
       .from("nodes")
-      .insert([{ id: newId, label, type }])
+      .insert([{ id: newId, label, type, level }])
       .select();
+
     if (error) {
       console.error("[useNodes][addNode] error", error);
       return null;
     }
+
     const node = mapDBNodeToApp(data?.[0] as DBNode);
     setNodes(prev => [...prev, node]);
     console.log("[useNodes][addNode] success", node);
     return node;
-  }, [mapDBNodeToApp]);
+  },
+  [mapDBNodeToApp, nodes]
+);
+
 
   // Suppression d’un nœud
   const deleteNode = useCallback(async (id: string): Promise<boolean> => {

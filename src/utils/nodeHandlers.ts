@@ -3,10 +3,10 @@ import type { NodeType, LinkType } from "../types/graph";
 /**
  * Handler pour créer un enfant et le lier au parent
  */
-export async function addChildNodeHandler(
+ export async function addChildNodeHandler(
   parentId: string,
   nodes: NodeType[],
-  addNode: (label: string, type?: string) => Promise<NodeType | null>,
+  addNode: (label: string, type?: string | null, level?: number) => Promise<NodeType | null>,
   addLink: (source: string, target: string, type?: string) => Promise<LinkType | null>
 ) {
   const parentNode = nodes.find(n => n.id === parentId);
@@ -17,11 +17,14 @@ export async function addChildNodeHandler(
 
   console.log("[graph][addChildNode] parent label:", parentNode.label);
 
-  const newNode = await addNode(`Enfant de ${parentNode.label}`, "child");
+  const childLevel = (parentNode.level ?? 0) + 1;
+
+  const newNode = await addNode(`Enfant de ${parentNode.label}`, "child", childLevel);
   if (!newNode) return;
 
   await addLink(parentId, newNode.id, "parent-child");
 }
+
 
 /**
  * Handler pour supprimer un nœud et tous ses liens associés
