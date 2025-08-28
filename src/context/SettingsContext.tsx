@@ -1,5 +1,6 @@
 // src/context/SettingsContext.tsx
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useMemo, useEffect } from "react";
+import type { LinkType } from "../types/graph";
 
 interface SettingsContextType {
   hueStep: number;
@@ -13,13 +14,36 @@ interface SettingsContextType {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [hueStep, setHueStep] = useState(47); // valeur par défaut
+interface ProviderProps {
+  children: React.ReactNode;
+  links: LinkType[];
+}
+
+export const SettingsProvider: React.FC<ProviderProps> = ({ children, links }) => {
+  const [hueStep, setHueStep] = useState(47);
   const [showLabels, setShowLabels] = useState(true);
   const [linkTypeFilter, setLinkTypeFilter] = useState<string[]>([]);
 
-  // Liste des types de liens disponibles (peut être dynamique plus tard)
-  const availableLinkTypes = ["hiérarchique", "amical", "professionnel", "philosophique"];
+  // Génération dynamique des types uniques à partir des liens
+  const availableLinkTypes = useMemo(() => {
+    const types = Array.from(
+      new Set(
+        links
+          .map((link) => link.type)
+          .filter((t): t is string => t != null && t !== "")
+      )
+    );
+    return types;
+  }, [links]);
+
+  // Synchroniser le filtre avec les types disponibles (tout activé par défaut)
+  useEffect(() => {
+    if (availableLinkTypes.length > 0) {
+      setLinkTypeFilter((prev) =>
+        prev.length === 0 ? availableLinkTypes : prev.filter((t) => availableLinkTypes.includes(t))
+      );
+    }
+  }, [availableLinkTypes]);
 
   return (
     <SettingsContext.Provider

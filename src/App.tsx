@@ -1,6 +1,5 @@
-import SettingsPanel from "./components/SettingsPanel";
-
 import React from "react";
+import SettingsPanel from "./components/SettingsPanel";
 import InfoPanel from "./components/InfoPanel";
 import GraphWrapper from "./components/GraphWrapper";
 
@@ -12,10 +11,10 @@ import { useGraphDataSync } from "./hooks/useGraphDataSync";
 import { useGraphInitialFetch } from "./hooks/useGraphInitialFetch";
 import useCameraTracker from "./hooks/useCameraTracker";
 import { useNodeLabelGenerator } from "./hooks/useNodeLabelGenerator";
-import { addChildNodeHandler, deleteNodeHandler, deleteNodeRecursive } from "./utils/nodeHandlers";
-import { levelToColor } from "./utils/color"; // to do : delete
+import { addChildNodeHandler, deleteNodeRecursive } from "./utils/nodeHandlers";
 import useLabelSprite from "./components/LabelSprite";
 
+import { SettingsProvider } from "./context/SettingsContext";
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import type { NodeType, LinkType } from "./types/graph";
 
@@ -48,52 +47,53 @@ function App() {
   const generateTextLabel = useNodeLabelGenerator();
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
 
-  // --- Fetch initial data (externalisé) ---
+  // --- Fetch initial data ---
   useGraphInitialFetch(fetchGraphData, fetchLinks, fetchVisualLinks);
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
-      <SettingsPanel />
-      
-      <GraphWrapper
-        fgRef={fgRef}
-        graphData={graphData}
-        selectedNodes={selectedNodes}
-        selectedLinks={selectedLinks}
-        setSelectedLinks={setSelectedLinks}
-        getLinkId={getLinkId}
-        nodeThreeObject={nodeThreeObject}
-        onNodeClick={onNodeClick}
-        onLinkClick={onLinkClick}
-        visualLinks={visualLinks}
-      />
+    <SettingsProvider links={links}>
+      <div style={{ width: "100vw", height: "100vh" }}>
+        <SettingsPanel />
 
-      <InfoPanel
-        selectedNodes={selectedNodeObjects}
-        selectedLinks={selectedLinkObjects}
-        nodes={nodes}
-        links={links}
-        onClose={() => {
-          setSelectedNodes(new Set());
-          setSelectedLinks(new Set());
-          console.log("[graph][infoPanel] Closed");
-        }}
-        onCreateChildNode={async (parentId) => {
-          await addChildNodeHandler(parentId, nodes, addNode, addLink);
-        }}
-        onDeleteNode={async (nodeId) => {
-          await deleteNodeRecursive(
-            nodeId,
-            nodes,
-            links,
-            deleteNode,
-            deleteLink,
-            visualLinks,
-            removeVisualLink
-          );
-        }}
-      />
-    </div>
+        <GraphWrapper
+          fgRef={fgRef}
+          graphData={graphData}
+          selectedNodes={selectedNodes}
+          selectedLinks={selectedLinks}
+          setSelectedLinks={setSelectedLinks}
+          getLinkId={getLinkId}
+          nodeThreeObject={nodeThreeObject}
+          onNodeClick={onNodeClick}
+          onLinkClick={onLinkClick}
+          visualLinks={visualLinks}
+        />
+
+        <InfoPanel
+          selectedNodes={selectedNodeObjects}
+          selectedLinks={selectedLinkObjects}
+          nodes={nodes}
+          links={links}
+          onClose={() => {
+            setSelectedNodes(new Set());
+            setSelectedLinks(new Set());
+          }}
+          onCreateChildNode={async (parentId) => {
+            await addChildNodeHandler(parentId, nodes, addNode, addLink);
+          }}
+          onDeleteNode={async (nodeId) => {
+            await deleteNodeRecursive(
+              nodeId,
+              nodes,
+              links,
+              deleteNode,
+              deleteLink,
+              visualLinks,
+              removeVisualLink
+            );
+          }}
+        />
+      </div>
+    </SettingsProvider>
   );
 }
 
