@@ -2,6 +2,7 @@
 import React from "react";
 import ForceGraph3D from "react-force-graph-3d";
 import { useVisualLinksRenderer } from "../hooks/useVisualLinksRenderer";
+import { useSettings } from "../context/SettingsContext"; // <-- import du context
 import type { NodeType, LinkType } from "../types/graph";
 import type { VisualLinkType } from "../types/VisualLinkType";
 import type { ForceGraphMethods } from "react-force-graph-3d";
@@ -42,6 +43,10 @@ export default function GraphWrapper({
     getLinkId,
   });
 
+  // --- Récupération du hueStep depuis le context ---
+  const { hueStep } = useSettings();
+  console.log("[GraphWrapper] Current hueStep:", hueStep);
+
   return (
     <ForceGraph3D
       ref={fgRef}
@@ -53,9 +58,21 @@ export default function GraphWrapper({
       linkOpacity={1}
       nodeThreeObject={nodeThreeObject}
       nodeThreeObjectExtend
-      nodeColor={(node: NodeType) =>
-        selectedNodes.has(node.id) ? "orange" : levelToColor(node.level ?? 0)
-      }
+      nodeColor={(node: NodeType) => {
+        const color =
+          selectedNodes.has(node.id)
+            ? "orange"
+            : levelToColor(node.level ?? 0, hueStep);
+        console.log(
+          "[GraphWrapper][nodeColor]",
+          node.label,
+          "level:",
+          node.level,
+          "color:",
+          color
+        );
+        return color;
+      }}
       onNodeClick={onNodeClick}
       linkColor={(link) =>
         selectedLinks.has(getLinkId(link as LinkType)) ? "orange" : "#aaa"
