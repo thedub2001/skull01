@@ -1,3 +1,5 @@
+import SettingsPanel from "./components/SettingsPanel";
+
 import React from "react";
 import InfoPanel from "./components/InfoPanel";
 import GraphWrapper from "./components/GraphWrapper";
@@ -51,6 +53,8 @@ function App() {
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
+      <SettingsPanel />
+      
       <GraphWrapper
         fgRef={fgRef}
         graphData={graphData}
