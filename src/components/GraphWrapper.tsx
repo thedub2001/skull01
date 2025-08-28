@@ -33,6 +33,8 @@ export default function GraphWrapper({
   onLinkClick,
   visualLinks,
 }: Props) {
+  const { hueStep, showLabels, linkTypeFilter } = useSettings();
+
   // --- Visual links rendering ---
   useVisualLinksRenderer({
     fgRef,
@@ -43,36 +45,41 @@ export default function GraphWrapper({
     getLinkId,
   });
 
-  // --- Récupération du hueStep depuis le context ---
-  const { hueStep } = useSettings();
-
-  // --- Calcul des couleurs des nœuds avec useMemo ---
+  // --- Couleurs des nœuds ---
   const nodeColors = useMemo(() => {
-    console.log("[GraphWrapper] Recalcul des couleurs des nœuds, hueStep:", hueStep);
+    console.log("[GraphWrapper] Recalcul couleurs, hueStep:", hueStep);
     return graphData.nodes.reduce((acc, node) => {
       acc[node.id] = levelToColor(node.level ?? 0, hueStep);
       return acc;
     }, {} as Record<string, string>);
   }, [graphData.nodes, hueStep]);
 
+  // --- Filtrage des liens selon linkTypeFilter ---
+  const filteredLinkColor = (link: LinkType) => {
+    if (!linkTypeFilter.length || linkTypeFilter.includes(link.type)) {
+      return selectedLinks.has(getLinkId(link)) ? "orange" : "#aaa";
+    }
+    return "rgba(0,0,0,0)"; // lien invisible
+  };
+
+  // --- Choix d'affichage des labels ---
+  const nodeThreeObjectWithLabel = (node: NodeType) =>
+    showLabels ? nodeThreeObject(node) : null;
+
   return (
     <ForceGraph3D
       ref={fgRef}
       graphData={graphData}
       backgroundColor="#222"
-      linkWidth={(link) =>
-        selectedLinks.has(getLinkId(link as LinkType)) ? 6 : 2
-      }
+      linkWidth={(link) => (selectedLinks.has(getLinkId(link)) ? 6 : 2)}
       linkOpacity={1}
-      nodeThreeObject={nodeThreeObject}
+      nodeThreeObject={nodeThreeObjectWithLabel}
       nodeThreeObjectExtend
       nodeColor={(node: NodeType) =>
         selectedNodes.has(node.id) ? "orange" : nodeColors[node.id]
       }
       onNodeClick={onNodeClick}
-      linkColor={(link) =>
-        selectedLinks.has(getLinkId(link as LinkType)) ? "orange" : "#aaa"
-      }
+      linkColor={filteredLinkColor}
       onLinkClick={onLinkClick}
     />
   );

@@ -3,13 +3,37 @@ import React, { useState } from "react";
 import { useSettings } from "../context/SettingsContext";
 
 const SettingsPanel: React.FC = () => {
-  const { hueStep, setHueStep } = useSettings();
+  const {
+    hueStep,
+    setHueStep,
+    showLabels,
+    setShowLabels,
+    linkTypeFilter,
+    setLinkTypeFilter,
+    availableLinkTypes,
+  } = useSettings();
+
   const [isOpen, setIsOpen] = useState(true);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleHueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     console.log("[SettingsPanel] New hueStep:", value);
     setHueStep(value);
+  };
+
+  const handleShowLabelsToggle = () => {
+    setShowLabels((prev) => !prev);
+    console.log("[SettingsPanel] showLabels:", !showLabels);
+  };
+
+  const handleLinkTypeChange = (type: string) => {
+    setLinkTypeFilter((prev) => {
+      const newFilter = prev.includes(type)
+        ? prev.filter((t) => t !== type)
+        : [...prev, type];
+      console.log("[SettingsPanel] linkTypeFilter:", newFilter);
+      return newFilter;
+    });
   };
 
   const togglePanel = () => {
@@ -37,6 +61,7 @@ const SettingsPanel: React.FC = () => {
 
             <h2 className="text-xl font-semibold mb-4">Paramètres</h2>
 
+            {/* Hue Step */}
             <div className="mb-4">
               <label htmlFor="hueStep" className="block mb-2">
                 Hue Step: {hueStep}
@@ -48,9 +73,37 @@ const SettingsPanel: React.FC = () => {
                 max={100}
                 step={1}
                 value={hueStep}
-                onChange={handleChange}
+                onChange={handleHueChange}
                 className="w-full accent-blue-500"
               />
+            </div>
+
+            {/* Show labels */}
+            <div className="mb-4 flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="showLabels"
+                checked={showLabels}
+                onChange={handleShowLabelsToggle}
+                className="accent-blue-500"
+              />
+              <label htmlFor="showLabels">Afficher les labels</label>
+            </div>
+
+            {/* Filter par type de lien */}
+            <div className="mb-4">
+              <label className="block mb-2">Types de liens :</label>
+              {availableLinkTypes.map((type) => (
+                <div key={type} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={linkTypeFilter.includes(type)}
+                    onChange={() => handleLinkTypeChange(type)}
+                    className="accent-blue-500"
+                  />
+                  <label>{type}</label>
+                </div>
+              ))}
             </div>
           </>
         )}
