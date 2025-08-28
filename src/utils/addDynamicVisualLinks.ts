@@ -41,6 +41,8 @@ export function addDynamicVisualLinks(
   });
   visualLinkLines = [];
 
+  if (visualLinks.length === 0) return; // rien à dessiner
+
   visualLinks.forEach(link => {
     const sourceNode = graphData.nodes.find(n => n.id === link.source);
     const targetNode = graphData.nodes.find(n => n.id === link.target);

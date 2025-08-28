@@ -23,8 +23,8 @@ export function useVisualLinksRenderer({
 }: Props) {
   // --- Initialisation ---
   useEffect(() => {
-    if (!fgRef.current || visualLinks.length === 0) return;
-
+    if (!fgRef.current) return;
+    
     const timer = setTimeout(() => {
       if (!fgRef.current) return;
 

@@ -10,7 +10,7 @@ import { useGraphDataSync } from "./hooks/useGraphDataSync";
 import { useGraphInitialFetch } from "./hooks/useGraphInitialFetch";
 import useCameraTracker from "./hooks/useCameraTracker";
 import { useNodeLabelGenerator } from "./hooks/useNodeLabelGenerator";
-import { addChildNodeHandler, deleteNodeHandler } from "./utils/nodeHandlers";
+import { addChildNodeHandler, deleteNodeHandler, deleteNodeRecursive } from "./utils/nodeHandlers";
 import { levelToColor } from "./utils/color"; // to do : delete
 import useLabelSprite from "./components/LabelSprite";
 
@@ -24,7 +24,7 @@ function App() {
   // --- Hooks de données ---
   const { nodes, fetchGraphData, addNode, deleteNode } = useNodes();
   const { links, fetchLinks, addLink, deleteLink } = useLinks();
-  const { visualLinks, fetchVisualLinks } = useVisualLinks();
+  const { visualLinks, fetchVisualLinks, addVisualLink, removeVisualLink } = useVisualLinks();
   const {
     selectedNodes,
     selectedLinks,
@@ -78,7 +78,15 @@ function App() {
           await addChildNodeHandler(parentId, nodes, addNode, addLink);
         }}
         onDeleteNode={async (nodeId) => {
-          await deleteNodeHandler(nodeId, nodes, links, deleteNode, deleteLink);
+          await deleteNodeRecursive(
+            nodeId,
+            nodes,
+            links,
+            deleteNode,
+            deleteLink,
+            visualLinks,
+            removeVisualLink
+          );
         }}
       />
     </div>
