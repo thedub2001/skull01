@@ -1,4 +1,4 @@
-// localDB.ts
+// db/localDB.ts
 import { openDB, type IDBPDatabase } from "idb";
 import type { NodeType, LinkType } from "../types/graph";
 import type { VisualLink } from "../utils/addDynamicVisualLinks";

@@ -1,88 +1,84 @@
 // hooks/useNodes.ts
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { supabase } from "../lib/supabase";
+import { useSettings } from "../context/SettingsContext";
 import type { NodeType } from "../types/graph";
 import * as localDB from "../db/localDB";
+import * as remoteDB from "../db/remoteDB";
 
-/**
- * Hook de gestion des nœuds
- */
 export function useNodes() {
+  const { dbMode } = useSettings();
   const [nodes, setNodes] = useState<NodeType[]>([]);
 
-  /** Fetch nodes depuis localDB, puis tente Supabase pour sync distant */
-  const fetchGraphData = useCallback(async (): Promise<NodeType[]> => {
-    console.log("[useNodes][fetchGraphData] start");
+  /** Fetch */
+  const fetchGraphData = useCallback(async () => {
+    console.log("[useNodes][fetchGraphData] mode=", dbMode);
 
-    // 1️⃣ Charger local
-    const localNodes = await localDB.getAll("nodes");
-    if (localNodes.length) {
-      setNodes(localNodes);
-      console.log("[useNodes][fetchGraphData] local loaded", localNodes);
+    if (dbMode === "local") {
+      const local = await localDB.getAll("nodes");
+      setNodes(local);
+      return local;
     }
 
-    // 2️⃣ Essayer distant
-    try {
-      const { data, error } = await supabase.from("nodes").select("*");
-      if (error || !data) {
-        console.warn("[useNodes][fetchGraphData] Supabase offline?", error?.message);
-        return localNodes;
-      }
-
-      setNodes(data);
-      console.log("[useNodes][fetchGraphData] remote loaded", data);
-
-      // 3️⃣ Sync local avec distant
-      await localDB.importDB({ nodes: data, links: [], visual_links: [] });
-
-      return data;
-    } catch (err) {
-      console.warn("[useNodes][fetchGraphData] fetch error", err);
-      return localNodes;
+    if (dbMode === "remote") {
+      const remote = await remoteDB.fetchNodes();
+      setNodes(remote);
+      return remote;
     }
-  }, []);
 
-  /** Ajout local + tentative sync distant */
-  const addNode = useCallback(
-    async (label: string,type?: string | null, level?: number): Promise<NodeType> => {
-      const newNode: NodeType = { id: uuidv4(), label, level };
+    if (dbMode === "sync") {
+      const remote = await remoteDB.fetchNodes();
+      setNodes(remote);
+      // maj local avec la vérité remote
+      await localDB.importDB({ nodes: remote, links: [], visual_links: [] });
+      return remote;
+    }
 
-      // Local immédiat
+    return [];
+  }, [dbMode]);
+
+  /** Add */
+  const addNode = useCallback(async (label: string, level?: number) => {
+    const newNode: NodeType = { id: uuidv4(), label, level };
+    console.log("[useNodes][addNode] mode=", dbMode, newNode);
+
+    if (dbMode === "local") {
       await localDB.addItem("nodes", newNode);
       setNodes(prev => [...prev, newNode]);
-      console.log("[useNodes][addNode] local added", newNode);
-
-      // Essayer distant
-      try {
-        const { error } = await supabase
-          .from("nodes")
-          .insert([{ id: newNode.id, label: newNode.label, level: newNode.level }]);
-        if (error) console.warn("[useNodes][addNode] Supabase offline", error.message);
-      } catch (err) {
-        console.warn("[useNodes][addNode] remote insert error", err);
-      }
-
-      return newNode;
-    },
-    []
-  );
-
-  /** Suppression local + tentative sync distant */
-  const deleteNode = useCallback(async (id: string): Promise<boolean> => {
-    await localDB.deleteItem("nodes", id);
-    setNodes(prev => prev.filter(n => n.id !== id));
-    console.log("[useNodes][deleteNode] local deleted id=", id);
-
-    try {
-      const { error } = await supabase.from("nodes").delete().eq("id", id);
-      if (error) console.warn("[useNodes][deleteNode] Supabase offline", error.message);
-    } catch (err) {
-      console.warn("[useNodes][deleteNode] remote delete error", err);
     }
 
+    if (dbMode === "remote") {
+      await remoteDB.addNode(newNode);
+      setNodes(prev => [...prev, newNode]);
+    }
+
+    if (dbMode === "sync") {
+      await remoteDB.addNode(newNode);
+      await localDB.addItem("nodes", newNode);
+      setNodes(prev => [...prev, newNode]);
+    }
+
+    return newNode;
+  }, [dbMode]);
+
+  /** Delete */
+  const deleteNode = useCallback(async (id: string) => {
+    console.log("[useNodes][deleteNode] mode=", dbMode, id);
+
+    if (dbMode === "local") {
+      await localDB.deleteItem("nodes", id);
+    }
+    if (dbMode === "remote") {
+      await remoteDB.deleteNode(id);
+    }
+    if (dbMode === "sync") {
+      await remoteDB.deleteNode(id);
+      await localDB.deleteItem("nodes", id);
+    }
+
+    setNodes(prev => prev.filter(n => n.id !== id));
     return true;
-  }, []);
+  }, [dbMode]);
 
   return { nodes, fetchGraphData, addNode, deleteNode };
 }

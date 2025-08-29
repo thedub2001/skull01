@@ -1,3 +1,4 @@
+// app.tsx
 import React from "react";
 import SettingsPanel from "./components/SettingsPanel";
 import InfoPanel from "./components/InfoPanel";
@@ -14,12 +15,10 @@ import { useNodeLabelGenerator } from "./hooks/useNodeLabelGenerator";
 import { addChildNodeHandler, deleteNodeRecursive } from "./utils/nodeHandlers";
 import useLabelSprite from "./components/LabelSprite";
 
-import { SettingsProvider } from "./context/SettingsContext";
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import type { NodeType, LinkType } from "./types/graph";
 
 function App() {
-  // --- Ref partagé ---
   const fgRef = React.useRef<ForceGraphMethods<NodeType, LinkType> | null>(null);
 
   // --- Hooks de données ---
@@ -40,60 +39,54 @@ function App() {
 
   const graphData = useGraphDataSync(nodes, links);
 
-  // --- Camera tracker ---
   const cameraPos = useCameraTracker(fgRef);
-
-  // --- Helpers ---
   const generateTextLabel = useNodeLabelGenerator();
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
 
-  // --- Fetch initial data ---
   useGraphInitialFetch(fetchGraphData, fetchLinks, fetchVisualLinks);
 
   return (
-    <SettingsProvider links={links}>
-      <div style={{ width: "100vw", height: "100vh" }}>
-        <SettingsPanel />
+    <div style={{ width: "100vw", height: "100vh" }}>
+      <SettingsPanel />
 
-        <GraphWrapper
-          fgRef={fgRef}
-          graphData={graphData}
-          selectedNodes={selectedNodes}
-          selectedLinks={selectedLinks}
-          setSelectedLinks={setSelectedLinks}
-          getLinkId={getLinkId}
-          nodeThreeObject={nodeThreeObject}
-          onNodeClick={onNodeClick}
-          onLinkClick={onLinkClick}
-          visualLinks={visualLinks}
-        />
+      <GraphWrapper
+        fgRef={fgRef}
+        graphData={graphData}
+        selectedNodes={selectedNodes}
+        selectedLinks={selectedLinks}
+        setSelectedLinks={setSelectedLinks}
+        getLinkId={getLinkId}
+        nodeThreeObject={nodeThreeObject}
+        onNodeClick={onNodeClick}
+        onLinkClick={onLinkClick}
+        visualLinks={visualLinks}
+      />
 
-        <InfoPanel
-          selectedNodes={selectedNodeObjects}
-          selectedLinks={selectedLinkObjects}
-          nodes={nodes}
-          links={links}
-          onClose={() => {
-            setSelectedNodes(new Set());
-            setSelectedLinks(new Set());
-          }}
-          onCreateChildNode={async (parentId) => {
-            await addChildNodeHandler(parentId, nodes, addNode, addLink);
-          }}
-          onDeleteNode={async (nodeId) => {
-            await deleteNodeRecursive(
-              nodeId,
-              nodes,
-              links,
-              deleteNode,
-              deleteLink,
-              visualLinks,
-              removeVisualLink
-            );
-          }}
-        />
-      </div>
-    </SettingsProvider>
+      <InfoPanel
+        selectedNodes={selectedNodeObjects}
+        selectedLinks={selectedLinkObjects}
+        nodes={nodes}
+        links={links}
+        onClose={() => {
+          setSelectedNodes(new Set());
+          setSelectedLinks(new Set());
+        }}
+        onCreateChildNode={async (parentId) => {
+          await addChildNodeHandler(parentId, nodes, addNode, addLink);
+        }}
+        onDeleteNode={async (nodeId) => {
+          await deleteNodeRecursive(
+            nodeId,
+            nodes,
+            links,
+            deleteNode,
+            deleteLink,
+            visualLinks,
+            removeVisualLink
+          );
+        }}
+      />
+    </div>
   );
 }
 

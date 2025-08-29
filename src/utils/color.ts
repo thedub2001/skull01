@@ -6,7 +6,7 @@ export function levelToColor(level: number, hueStep: number = 47): string {
   const hue = (baseHue + level * hueStep) % 360;
   const saturation = 80;
   const lightness = level % 2 === 0 ? 45 : 65;
-  console.log("[levelToColor] level:", level, "hueStep:", hueStep, "hue:", hue);
+  //console.log("[levelToColor] level:", level, "hueStep:", hueStep, "hue:", hue);
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 

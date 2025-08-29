@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { NodeType, LinkType } from "../types/graph";
+import isEqual from "fast-deep-equal";
 
 /**
  * Hook pour synchroniser nodes & links avec graphData.
@@ -12,11 +13,8 @@ export function useGraphDataSync(nodes: NodeType[], links: LinkType[]) {
   });
 
   useEffect(() => {
-    setGraphData(prev => {
-      // Evite de setter si rien n’a changé (comparaison par référence)
-      if (prev.nodes === nodes && prev.links === links) return prev;
-      return { nodes, links };
-    });
+    if (isEqual(graphData.nodes, nodes) && isEqual(graphData.links, links)) return;
+    setGraphData({ nodes, links });
   }, [nodes, links]);
 
   return graphData;
