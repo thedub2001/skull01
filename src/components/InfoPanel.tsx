@@ -1,3 +1,4 @@
+// comonents/InfoPanel.tsx
 import React from "react";
 import type { NodeType, LinkType } from "../types/graph";
 

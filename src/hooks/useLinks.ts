@@ -1,65 +1,85 @@
 // hooks/useLinks.ts
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { supabase } from "../lib/supabase";
-import type { DBLink, LinkType } from "../types/graph";
+import { useSettings } from "../context/SettingsContext";
+import type { LinkType } from "../types/graph";
+import * as localDB from "../db/localDB";
+import * as remoteDB from "../db/remoteDB";
+import { pullRemoteToLocal } from "../db/sync";
 
-/**
- * Hook de gestion des liens
- */
 export function useLinks() {
+  const { dbMode } = useSettings();
   const [links, setLinks] = useState<LinkType[]>([]);
 
-  // Conversion DB → App
-  const mapDBLinkToApp = useCallback((l: DBLink): LinkType => ({
-    id: l.id,
-    source: l.source,
-    target: l.target,
-    type: l.type,
-  }), []);
+  /** Fetch complet */
+  const fetchLinks = useCallback(async () => {
+    console.log("[useLinks][fetchLinks] mode=", dbMode);
 
-  // Fetch complet des liens
-  const fetchLinks = useCallback(async (): Promise<LinkType[]> => {
-    console.log("[useLinks][fetchLinks] start");
-    const { data, error } = await supabase.from("links").select("*");
-    if (error) {
-      console.error("[useLinks][fetchLinks] error", error);
-      return [];
+    if (dbMode === "local") {
+      const local = await localDB.getAll("links");
+      setLinks(local);
+      return local;
     }
-    const mapped = (data as DBLink[]).map(mapDBLinkToApp);
-    setLinks(mapped);
-    console.log("[useLinks][fetchLinks] success", mapped);
-    return mapped;
-  }, [mapDBLinkToApp]);
 
-  // Ajout d’un lien
-  const addLink = useCallback(async (source: string, target: string, type: string | null = null): Promise<LinkType | null> => {
-    const newId = uuidv4();
-    const { data, error } = await supabase
-      .from("links")
-      .insert([{ id: newId, source, target, type }])
-      .select();
-    if (error) {
-      console.error("[useLinks][addLink] error", error);
-      return null;
+    if (dbMode === "remote") {
+      const remote = await remoteDB.fetchLinks();
+      setLinks(remote);
+      return remote;
     }
-    const link = mapDBLinkToApp(data?.[0] as DBLink);
-    setLinks(prev => [...prev, link]);
-    console.log("[useLinks][addLink] success", link);
-    return link;
-  }, [mapDBLinkToApp]);
 
-  // Suppression d’un lien
-  const deleteLink = useCallback(async (id: string): Promise<boolean> => {
-    const { error } = await supabase.from("links").delete().eq("id", id);
-    if (error) {
-      console.error("[useLinks][deleteLink] error", error);
-      return false;
+    if (dbMode === "sync") {
+      // Full overwrite local avec le remote
+      await pullRemoteToLocal();
+
+      // Lire tout depuis local pour mettre à jour le state
+      const localLinks = await localDB.getAll("links");
+      setLinks(localLinks);
+      return localLinks;
     }
-    setLinks(prev => prev.filter(l => l.id !== id));
-    console.log("[useLinks][deleteLink] success", id);
-    return true;
-  }, []);
+
+    return [];
+  }, [dbMode]);
+
+  /** Add */
+  const addLink = useCallback(
+    async (source: string, target: string, type?: string | null) => {
+      const newLink: LinkType = { id: uuidv4(), source, target, type };
+      console.log("[useLinks][addLink] mode=", dbMode, newLink);
+
+      if (dbMode === "local") {
+        await localDB.addItem("links", newLink);
+      } else if (dbMode === "remote") {
+        await remoteDB.addLink(newLink);
+      } else if (dbMode === "sync") {
+        await remoteDB.addLink(newLink);
+        await localDB.addItem("links", newLink);
+      }
+
+      setLinks((prev) => [...prev, newLink]);
+      return newLink;
+    },
+    [dbMode]
+  );
+
+  /** Delete */
+  const deleteLink = useCallback(
+    async (id: string) => {
+      console.log("[useLinks][deleteLink] mode=", dbMode, id);
+
+      if (dbMode === "local") {
+        await localDB.deleteItem("links", id);
+      } else if (dbMode === "remote") {
+        await remoteDB.deleteLink(id);
+      } else if (dbMode === "sync") {
+        await remoteDB.deleteLink(id);
+        await localDB.deleteItem("links", id);
+      }
+
+      setLinks((prev) => prev.filter((l) => l.id !== id));
+      return true;
+    },
+    [dbMode]
+  );
 
   return { links, fetchLinks, addLink, deleteLink };
 }
