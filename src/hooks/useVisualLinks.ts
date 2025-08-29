@@ -1,3 +1,5 @@
+//hooks/useVisualLinks.ts
+
 import { useState, useCallback } from "react";
 import type { VisualLinkType } from "../types/VisualLinkType";
 import { supabase } from "../lib/supabase";

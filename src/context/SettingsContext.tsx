@@ -1,6 +1,9 @@
 // src/context/SettingsContext.tsx
 import React, { createContext, useState, useContext, useMemo, useEffect } from "react";
 import type { LinkType } from "../types/graph";
+import { pushLocalToRemote, pullRemoteToLocal, initRealtimeSync } from "../db/sync";
+
+export type DbMode = "local" | "remote" | "sync";
 
 interface SettingsContextType {
   hueStep: number;
@@ -10,6 +13,12 @@ interface SettingsContextType {
   linkTypeFilter: string[];
   setLinkTypeFilter: (value: string[]) => void;
   availableLinkTypes: string[];
+
+  // --- Ajout pour DB ---
+  dbMode: DbMode;
+  setDbMode: (mode: DbMode) => void;
+  pushLocalToRemote: () => Promise<void>;
+  pullRemoteToLocal: () => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -23,6 +32,9 @@ export const SettingsProvider: React.FC<ProviderProps> = ({ children, links }) =
   const [hueStep, setHueStep] = useState(47);
   const [showLabels, setShowLabels] = useState(true);
   const [linkTypeFilter, setLinkTypeFilter] = useState<string[]>([]);
+
+  // --- Nouvel état pour dbMode ---
+  const [dbMode, setDbMode] = useState<DbMode>("local");
 
   // Génération dynamique des types uniques à partir des liens
   const availableLinkTypes = useMemo(() => {
@@ -45,6 +57,14 @@ export const SettingsProvider: React.FC<ProviderProps> = ({ children, links }) =
     }
   }, [availableLinkTypes]);
 
+  // Gestion sync temps réel
+  useEffect(() => {
+    if (dbMode === "sync") {
+      console.log("[SettingsContext] Sync mode activé → initRealtimeSync");
+      initRealtimeSync();
+    }
+  }, [dbMode]);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -55,6 +75,10 @@ export const SettingsProvider: React.FC<ProviderProps> = ({ children, links }) =
         linkTypeFilter,
         setLinkTypeFilter,
         availableLinkTypes,
+        dbMode,
+        setDbMode,
+        pushLocalToRemote,
+        pullRemoteToLocal,
       }}
     >
       {children}

@@ -11,6 +11,10 @@ const SettingsPanel: React.FC = () => {
     linkTypeFilter,
     setLinkTypeFilter,
     availableLinkTypes,
+    dbMode,
+    setDbMode,
+    pushLocalToRemote,
+    pullRemoteToLocal,
   } = useSettings();
 
   const [isOpen, setIsOpen] = useState(true);
@@ -104,6 +108,47 @@ const SettingsPanel: React.FC = () => {
                   <label>{type}</label>
                 </div>
               ))}
+            </div>
+
+            {/* --- Mode DB --- */}
+            <div className="mb-4">
+              <label className="block mb-2">Mode Base de données :</label>
+              {(["local", "remote", "sync"] as const).map((mode) => (
+                <div key={mode} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id={`dbmode-${mode}`}
+                    checked={dbMode === mode}
+                    onChange={() => {
+                      console.log("[SettingsPanel] dbMode:", mode);
+                      setDbMode(mode);
+                    }}
+                  />
+                  <label htmlFor={`dbmode-${mode}`}>{mode}</label>
+                </div>
+              ))}
+            </div>
+
+            {/* --- Boutons Push / Pull --- */}
+            <div className="mb-4 flex gap-2">
+              <button
+                className="bg-blue-600 px-2 py-1 rounded"
+                onClick={async () => {
+                  console.log("[SettingsPanel] Push local → remote");
+                  await pushLocalToRemote();
+                }}
+              >
+                Push Local → Remote
+              </button>
+              <button
+                className="bg-green-600 px-2 py-1 rounded"
+                onClick={async () => {
+                  console.log("[SettingsPanel] Pull remote → local");
+                  await pullRemoteToLocal();
+                }}
+              >
+                Pull Remote → Local
+              </button>
             </div>
           </>
         )}

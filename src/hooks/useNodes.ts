@@ -2,7 +2,8 @@
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "../lib/supabase";
-import type { DBNode, NodeType } from "../types/graph";
+import type { NodeType } from "../types/graph";
+import * as localDB from "../db/localDB";
 
 /**
  * Hook de gestion des nœuds
@@ -10,68 +11,76 @@ import type { DBNode, NodeType } from "../types/graph";
 export function useNodes() {
   const [nodes, setNodes] = useState<NodeType[]>([]);
 
-  // Conversion DB → App (NodeType)
-  const mapDBNodeToApp = useCallback((n: DBNode): NodeType => ({
-    id: n.id,
-    label: n.label,
-    level: n.level ?? undefined,
-  }), []);
-
-  // Fetch complet des nœuds
+  /** Fetch nodes depuis localDB, puis tente Supabase pour sync distant */
   const fetchGraphData = useCallback(async (): Promise<NodeType[]> => {
     console.log("[useNodes][fetchGraphData] start");
-    const { data, error } = await supabase.from("nodes").select("*");
-    if (error) {
-      console.error("[useNodes][fetchGraphData] error", error);
-      return [];
-    }
-    const mapped = (data as DBNode[]).map(mapDBNodeToApp);
-    setNodes(mapped);
-    console.log("[useNodes][fetchGraphData] success", mapped);
-    return mapped;
-  }, [mapDBNodeToApp]);
 
-  // Ajout d’un nœud
-// hooks/useNodes.ts
-
-const addNode = useCallback(
-  async (label: string, type: string | null = null, level?: number): Promise<NodeType | null> => {
-    const newId = uuidv4();
-
-    // sécurité optionnelle côté client
-    if (nodes.some(n => n.id === newId)) {
-      console.warn("[useNodes][addNode] UUID collision detected, regenerating...");
-      return await addNode(label, type, level); // rare mais possible
+    // 1️⃣ Charger local
+    const localNodes = await localDB.getAll("nodes");
+    if (localNodes.length) {
+      setNodes(localNodes);
+      console.log("[useNodes][fetchGraphData] local loaded", localNodes);
     }
 
-    const { data, error } = await supabase
-      .from("nodes")
-      .insert([{ id: newId, label, type, level }])
-      .select();
+    // 2️⃣ Essayer distant
+    try {
+      const { data, error } = await supabase.from("nodes").select("*");
+      if (error || !data) {
+        console.warn("[useNodes][fetchGraphData] Supabase offline?", error?.message);
+        return localNodes;
+      }
 
-    if (error) {
-      console.error("[useNodes][addNode] error", error);
-      return null;
+      setNodes(data);
+      console.log("[useNodes][fetchGraphData] remote loaded", data);
+
+      // 3️⃣ Sync local avec distant
+      await localDB.importDB({ nodes: data, links: [], visual_links: [] });
+
+      return data;
+    } catch (err) {
+      console.warn("[useNodes][fetchGraphData] fetch error", err);
+      return localNodes;
     }
+  }, []);
 
-    const node = mapDBNodeToApp(data?.[0] as DBNode);
-    setNodes(prev => [...prev, node]);
-    console.log("[useNodes][addNode] success", node);
-    return node;
-  },
-  [mapDBNodeToApp, nodes]
-);
+  /** Ajout local + tentative sync distant */
+  const addNode = useCallback(
+    async (label: string,type?: string | null, level?: number): Promise<NodeType> => {
+      const newNode: NodeType = { id: uuidv4(), label, level };
 
+      // Local immédiat
+      await localDB.addItem("nodes", newNode);
+      setNodes(prev => [...prev, newNode]);
+      console.log("[useNodes][addNode] local added", newNode);
 
-  // Suppression d’un nœud
+      // Essayer distant
+      try {
+        const { error } = await supabase
+          .from("nodes")
+          .insert([{ id: newNode.id, label: newNode.label, level: newNode.level }]);
+        if (error) console.warn("[useNodes][addNode] Supabase offline", error.message);
+      } catch (err) {
+        console.warn("[useNodes][addNode] remote insert error", err);
+      }
+
+      return newNode;
+    },
+    []
+  );
+
+  /** Suppression local + tentative sync distant */
   const deleteNode = useCallback(async (id: string): Promise<boolean> => {
-    const { error } = await supabase.from("nodes").delete().eq("id", id);
-    if (error) {
-      console.error("[useNodes][deleteNode] error", error);
-      return false;
-    }
+    await localDB.deleteItem("nodes", id);
     setNodes(prev => prev.filter(n => n.id !== id));
-    console.log("[useNodes][deleteNode] success", id);
+    console.log("[useNodes][deleteNode] local deleted id=", id);
+
+    try {
+      const { error } = await supabase.from("nodes").delete().eq("id", id);
+      if (error) console.warn("[useNodes][deleteNode] Supabase offline", error.message);
+    } catch (err) {
+      console.warn("[useNodes][deleteNode] remote delete error", err);
+    }
+
     return true;
   }, []);
 

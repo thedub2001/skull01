@@ -1,4 +1,5 @@
 // utils/nodeHandlers.ts
+import { NotEqualStencilFunc } from "three";
 import type { NodeType, LinkType } from "../types/graph";
 import type { VisualLinkType } from "../types/VisualLinkType";
 
@@ -88,7 +89,7 @@ export async function addChildNodeHandler(
 
   const childLevel = (parentNode.level ?? 0) + 1;
 
-  const newNode = await addNode(`Enfant de ${parentNode.label}`, "child", childLevel);
+  const newNode = await addNode(`Enfant de ${parentNode.label}`,null ,childLevel);
   if (!newNode) return;
 
   await addLink(parentId, newNode.id, "parent-child");
