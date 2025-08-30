@@ -3,67 +3,67 @@
         %% =====================
         %% --- Variables clés ---
         %% =====================
-        nodes[NodeType[]] 
-        links[LinkType[]] 
-        visualLinks[VisualLinkType[]] 
-        cameraPos[{ x,y,z }]
-        selectedNodes[Set<NodeType>] 
-        selectedLinks[Set<string>]
+        nodes["nodes array (NodeType[])"]
+        links["links array (LinkType[])"]
+        visualLinks["visualLinks array (VisualLinkType[])"]
+        cameraPos["cameraPos {x,y,z}"]
+        selectedNodes["selectedNodes set (NodeType)"]
+        selectedLinks["selectedLinks set (string)"]
 
         %% =====================
         %% --- Bases de données ---
         %% =====================
-        LocalDB[IndexedDB (localDB)]
-        RemoteDB[Supabase (remoteDB)]
+        LocalDB["IndexedDB (localDB)"]
+        RemoteDB["Supabase (remoteDB)"]
 
         %% --- CRUD Local ---
-        L_addNode[addItem("nodes")]
-        L_updateNode[addItem("nodes") / update]
-        L_deleteNode[deleteItem("nodes")]
-        L_addLink[addItem("links")]
-        L_deleteLink[deleteItem("links")]
-        L_addVisualLink[addItem("visual_links")]
-        L_deleteVisualLink[deleteItem("visual_links")]
-        L_export[exportDB]
-        L_import[importDB]
+        L_addNode["addItem('nodes')"]
+        L_updateNode["addItem('nodes') / update"]
+        L_deleteNode["deleteItem('nodes')"]
+        L_addLink["addItem('links')"]
+        L_deleteLink["deleteItem('links')"]
+        L_addVisualLink["addItem('visual_links')"]
+        L_deleteVisualLink["deleteItem('visual_links')"]
+        L_export["exportDB"]
+        L_import["importDB"]
 
         %% --- CRUD Remote ---
-        R_addNode[addNode(node)]
-        R_updateNode[updateNode(node)]
-        R_deleteNode[deleteNode(id)]
-        R_addLink[addLink(link)]
-        R_updateLink[updateLink(link)]
-        R_deleteLink[deleteLink(id)]
-        R_addVisualLink[addVisualLink(vl)]
-        R_updateVisualLink[updateVisualLink(vl)]
-        R_deleteVisualLink[deleteVisualLink(id)]
-        R_fetchNodes[fetchNodes()]
-        R_fetchLinks[fetchLinks()]
-        R_fetchVisualLinks[fetchVisualLinks()]
+        R_addNode["addNode(node)"]
+        R_updateNode["updateNode(node)"]
+        R_deleteNode["deleteNode(id)"]
+        R_addLink["addLink(link)"]
+        R_updateLink["updateLink(link)"]
+        R_deleteLink["deleteLink(id)"]
+        R_addVisualLink["addVisualLink(vl)"]
+        R_updateVisualLink["updateVisualLink(vl)"]
+        R_deleteVisualLink["deleteVisualLink(id)"]
+        R_fetchNodes["fetchNodes()"]
+        R_fetchLinks["fetchLinks()"]
+        R_fetchVisualLinks["fetchVisualLinks()"]
 
         %% =====================
         %% --- Hooks & Sync ---
         %% =====================
-        GraphFetch[useGraphInitialFetch] 
-        GraphSync[useGraphDataSync] 
-        SyncDB[pushLocalToRemote / pullRemoteToLocal]
+        GraphFetch["useGraphInitialFetch"] 
+        GraphSync["useGraphDataSync"] 
+        SyncDB["pushLocalToRemote / pullRemoteToLocal"]
 
-        CameraTracker[useCameraTracker] 
-        NodeLabelGen[useNodeLabelGenerator] 
-        LabelSprite[useLabelSprite] 
-        VisualLinksRenderer[useVisualLinksRenderer] 
+        CameraTracker["useCameraTracker"] 
+        NodeLabelGen["useNodeLabelGenerator"] 
+        LabelSprite["useLabelSprite"] 
+        VisualLinksRenderer["useVisualLinksRenderer"] 
 
         %% =====================
         %% --- UI Panels ---
         %% =====================
-        SettingsPanel[SettingsPanel]
-        InfoPanel[InfoPanel]
+        SettingsPanel["SettingsPanel"]
+        InfoPanel["InfoPanel"]
 
         %% =====================
         %% --- Three.js Scene ---
         %% =====================
-        ForceGraph[ForceGraph3D fgRef]
-        ThreeScene[THREE.Scene]
+        ForceGraph["ForceGraph3D fgRef"]
+        ThreeScene["THREE.Scene"]
 
         %% =====================
         %% --- Flux détaillé ---
@@ -153,4 +153,5 @@
         class GraphFetch,GraphSync,CameraTracker,NodeLabelGen,LabelSprite,VisualLinksRenderer react;
         class ForceGraph,ThreeScene three;
         class SettingsPanel,InfoPanel ui;
+
 ```

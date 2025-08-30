@@ -4,42 +4,42 @@
         %% --- Variables clés ---
         %% =====================
 
-        nodes[NodeType[]] 
-        links[LinkType[]] 
-        visualLinks[VisualLinkType[]] 
-        cameraPos[{ x,y,z }]
-        selectedNodes[Set<NodeType>] 
-        selectedLinks[Set<string>]
+        nodes["nodes array (NodeType[])"]
+        links["links array (LinkType[])"]
+        visualLinks["visualLinks array (VisualLinkType[])"]
+        cameraPos["cameraPos {x,y,z}"]
+        selectedNodes["selectedNodes set (NodeType)"]
+        selectedLinks["selectedLinks set (string)"]
 
         %% =====================
         %% --- Sources DB ---
         %% =====================
-        LocalDB[IndexedDB (localDB)]
-        RemoteDB[Supabase (remoteDB)]
+        LocalDB["IndexedDB (localDB)"]
+        RemoteDB["Supabase (remoteDB)"]
 
         %% =====================
         %% --- Hooks & Sync ---
         %% =====================
-        GraphFetch[useGraphInitialFetch] 
-        GraphSync[useGraphDataSync] 
-        SyncDB[push/pull sync]
+        GraphFetch["useGraphInitialFetch"] 
+        GraphSync["useGraphDataSync"] 
+        SyncDB["push/pull sync"]
 
-        CameraTracker[useCameraTracker] 
-        NodeLabelGen[useNodeLabelGenerator] 
-        LabelSprite[useLabelSprite] 
-        VisualLinksRenderer[useVisualLinksRenderer] 
+        CameraTracker["useCameraTracker"] 
+        NodeLabelGen["useNodeLabelGenerator"] 
+        LabelSprite["useLabelSprite"] 
+        VisualLinksRenderer["useVisualLinksRenderer"] 
 
         %% =====================
         %% --- UI Panels ---
         %% =====================
-        SettingsPanel[SettingsPanel]
-        InfoPanel[InfoPanel]
+        SettingsPanel["SettingsPanel"]
+        InfoPanel["InfoPanel"]
 
         %% =====================
         %% --- Three.js Scene ---
         %% =====================
-        ForceGraph[ForceGraph3D fgRef]
-        ThreeScene[THREE.Scene]
+        ForceGraph["ForceGraph3D fgRef"]
+        ThreeScene["THREE.Scene"]
 
         %% =====================
         %% --- Flux des données ---
