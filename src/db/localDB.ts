@@ -96,7 +96,7 @@ export async function importDB(data: {
   }
   for (const l of data.links) await addItem("links", l);
   for (const vl of data.visual_links) {
-    const vlCopy = { id: vl.id, source_id: vl.source_id, target_id: vl.target_id, type: vl.type, metadata: vl.metadata || {} };
+    const vlCopy = { id: vl.id, source: vl.source, target: vl.target, type: vl.type, metadata: vl.metadata || {} };
     await addItem("visual_links", vlCopy);
   }
   console.log("[localDB] Import terminé");

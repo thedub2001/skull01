@@ -25,8 +25,8 @@ export async function fetchVisualLinksFromSupabase(
 
   return data.map((row) => ({
     id: row.id,
-    source_id: row.source_id,
-    target_id: row.target_id,
+    source: row.source,
+    target: row.target,
     type: row.type,
     metadata: row.metadata || {},
   })) as VisualLink[];

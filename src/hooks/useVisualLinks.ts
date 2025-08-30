@@ -1,66 +1,93 @@
-//hooks/useVisualLinks.ts
-
+// hooks/useVisualLinks.ts
 import { useState, useCallback } from "react";
-import type { VisualLinkType } from "../types/VisualLinkType";
-import { supabase } from "../lib/supabase";
+import type { VisualLinkType } from '../types/VisualLinkType';
+import { useSettings } from "../context/SettingsContext";
+import * as localDB from "../db/localDB";
+import * as remoteDB from "../db/remoteDB";
+import { v4 as uuidv4 } from "uuid";
 
-/**
- * Hook pour gérer les visualLinks (fetch, add, remove)
- */
 export function useVisualLinks() {
+  const { dbMode } = useSettings();
   const [visualLinks, setVisualLinks] = useState<VisualLinkType[]>([]);
 
-  /** Récupère tous les visualLinks depuis Supabase */
+  /** Fetch */
   const fetchVisualLinks = useCallback(async () => {
-    console.log("[data][visualLinks] fetching...");
+    console.log("[useVisualLinks][fetchVisualLinks] mode=", dbMode);
 
-    const { data, error } = await supabase.from("visual_links").select("*");
-
-    if (error) {
-      console.error("[data][visualLinks] error:", error);
-      return;
+    if (dbMode === "local") {
+      const local = await localDB.getAll("visual_links");
+      setVisualLinks(local);
+      return local;
     }
 
-    setVisualLinks(data as VisualLinkType[]);
-    console.log("[data][visualLinks] success:", data);
-  }, []);
+    if (dbMode === "remote") {
+      const remote = await remoteDB.fetchVisualLinks();
+      setVisualLinks(remote);
+      return remote;
+    }
 
-  /** Ajoute un visualLink en base */
+    if (dbMode === "sync") {
+      const remote = await remoteDB.fetchVisualLinks();
+      // full overwrite local
+      await localDB.importDB({ nodes: [], links: [], visual_links: remote });
+      const localAfterSync = await localDB.getAll("visual_links");
+      setVisualLinks(localAfterSync);
+      return localAfterSync;
+    }
+
+    return [];
+  }, [dbMode]);
+
+  /** Add */
   const addVisualLink = useCallback(
-    async (source: string, target: string, type: string) => {
-      console.log("[data][visualLinks] adding:", { source, target, type });
+    async (source: string, target: string, type: string, metadata?: Record<string, unknown>,created_at?: string) => {
+      const newVL: VisualLinkType = {
+        id: uuidv4(),
+        source,
+        target,
+        type,
+        metadata: metadata ?? {},
+        created_at:"",
+      };
+      console.log("[useVisualLinks][addVisualLink] mode=", dbMode, newVL);
 
-      const { data, error } = await supabase
-        .from("visual_links")
-        .insert([{ source, target, type }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("[data][visualLinks] add error:", error);
-        return null;
+      if (dbMode === "local") {
+        await localDB.addItem("visual_links", newVL);
+        setVisualLinks(prev => [...prev, newVL]);
+      }
+      if (dbMode === "remote") {
+        await remoteDB.addVisualLink(newVL);
+        setVisualLinks(prev => [...prev, newVL]);
+      }
+      if (dbMode === "sync") {
+        await remoteDB.addVisualLink(newVL);
+        await localDB.addItem("visual_links", newVL);
+        setVisualLinks(prev => [...prev, newVL]);
       }
 
-      setVisualLinks(prev => [...prev, data as VisualLinkType]);
-      return data as VisualLinkType;
+      return newVL;
     },
-    []
+    [dbMode]
   );
 
-  /** Supprime un visualLink en base */
+  /** Delete */
   const removeVisualLink = useCallback(async (id: string) => {
-    console.log("[data][visualLinks] removing:", id);
+    console.log("[useVisualLinks][removeVisualLink] mode=", dbMode, id);
 
-    const { error } = await supabase.from("visual_links").delete().eq("id", id);
-
-    if (error) {
-      console.error("[data][visualLinks] remove error:", error);
-      return false;
+    if (dbMode === "local") {
+      await localDB.deleteItem("visual_links", id);
+    }
+    if (dbMode === "remote") {
+      await remoteDB.deleteVisualLink(id);
+    }
+    if (dbMode === "sync") {
+      await remoteDB.deleteVisualLink(id);
+      await localDB.deleteItem("visual_links", id);
     }
 
-    setVisualLinks(prev => prev.filter(link => link.id !== id));
+    setVisualLinks(prev => prev.filter(vl => vl.id !== id));
     return true;
-  }, []);
+  }, [dbMode]);
 
   return { visualLinks, fetchVisualLinks, addVisualLink, removeVisualLink };
 }
