@@ -1,0 +1,9 @@
+Typage VisualLink : remoteDB.ts et localDB.ts importent type { VisualLink } depuis utils/addDynamicVisualLinks, alors que le type officiel semble être VisualLinkType (dans types/VisualLinkType.ts). Incohérence possible à corriger pour éviter les dérives any.
+
+created_at ignoré dans useVisualLinks.addVisualLink (forcé à "").
+
+Interactions visual links : getSelectedLinks / onVisualLinkClick passés à addDynamicVisualLinks mais non utilisés → pas de clic/hover possible pour l’instant.
+
+Textures labels : useLabelSprite crée des CanvasTexture à la volée sans dispose() explicite → risque de fuite si ForceGraph ne recycle pas proprement les sprites.
+
+sync/export types : localDB.exportDB() renvoie Record<string, unknown[]> mais sync.pushLocalToRemote itère comme si c’était NodeType[]/LinkType[]/VisualLink[]. Ça peut masquer des erreurs de forme (selon strictesse TS).
