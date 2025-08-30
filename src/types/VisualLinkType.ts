@@ -1,3 +1,4 @@
+//types/VisualLinkTypes.ts
 export type VisualLinkType = {
     id: string;
     source: string

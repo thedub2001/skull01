@@ -1,3 +1,4 @@
+// hooks/useVisualLinksRenderer.ts
 import { useEffect } from "react";
 import { addDynamicVisualLinks, updateVisualLinks } from "../utils/addDynamicVisualLinks";
 import type { ForceGraphMethods } from "react-force-graph-3d";

@@ -1,0 +1,87 @@
+📂 src
+ ├── main.tsx
+ │    - Point d'entrée React.
+ │    - Monte <App /> dans le DOM, emballé dans <SettingsProvider>.
+ │
+ ├── App.tsx
+ │    - Composition principale :
+ │       • Initialise hooks data (nodes, links, visualLinks, selection).
+ │       • Branche caméra (useCameraTracker) et labels (useLabelSprite).
+ │       • Fetch initial (useGraphInitialFetch).
+ │       • Rend :
+ │          - <SettingsPanel>
+ │          - <GraphWrapper>
+ │          - <InfoPanel>
+ │
+ ├── context/
+ │    └── SettingsContext.tsx
+ │         - Contexte global pour réglages UI + dbMode.
+ │         - Expose pushLocalToRemote / pullRemoteToLocal.
+ │
+ ├── hooks/
+ │    ├── useNodes.ts              → CRUD + fetch nodes (local/remote/sync)
+ │    ├── useLinks.ts              → CRUD + fetch links
+ │    ├── useVisualLinks.ts        → CRUD + fetch visual links
+ │    ├── useGraphSelection.ts     → Sélection nœuds/liens + handlers
+ │    ├── useLabelSprite.tsx       → Génère THREE.Sprite label 3D en fonction de la distance caméra/noeud
+ │    ├── useGraphDataSync.ts      → Maintient {nodes, links} cohérent pour FG3D
+ │    ├── useGraphInitialFetch.ts  → Lance fetch initial (nodes, links, vlinks)
+ │    ├── useCameraTracker.ts      → Suit position caméra (state x,y,z)
+ │    ├── useNodeLabelGenerator.ts → Fabrique canvas text pour labels 3D
+ │    └── useVisualLinksRenderer.ts
+ │         - Injecte visuellement les visualLinks (addDynamicVisualLinks)
+ │         - Anime leur position (updateVisualLinks)
+ │
+ ├── components/
+ │    ├── GraphWrapper.tsx
+ │    │    - Encapsule <ForceGraph3D>.
+ │    │    - Rend nodes/links filtrés par type.
+ │    │    - Applique nodeThreeObject (labels sprites).
+ │    │    - Branche sélection nodes/liens.
+ │    │    - Rend visualLinks (useVisualLinksRenderer).
+ │    │
+ │    ├── SettingsPanel.tsx
+ │    │    - Panneau latéral gauche (toggleable).
+ │    │    - Contrôle : hueStep, showLabels, filtres de lien, dbMode.
+ │    │    - Boutons Push Local→Remote / Pull Remote→Local.
+ │    │
+ │    └── InfoPanel.tsx
+ │         - Panneau latéral droit affichant détails des sélections.
+ │         - Affiche info des nœuds sélectionnés (id, label, type, niveau).
+ │         - Boutons actions (créer enfant, supprimer).
+ │         - Affiche info des liens sélectionnés (source, target, type).
+ │
+ ├── utils/
+ │    ├── nodeHandlers.ts
+ │    │    - deleteNodeHandler : supprime node + liens associés.
+ │    │    - deleteNodeRecursive : supprime node + descendance.
+ │    │    - addChildNodeHandler : crée un enfant + lien parent-child.
+ │    │
+ │    └── addDynamicVisualLinks.ts (appelé mais pas encore montré)
+ │         - addDynamicVisualLinks / updateVisualLinks
+ │         - Gère rendu dynamique des visualLinks.
+ │
+ ├── types/
+ │    ├── graph.ts
+ │    │    - Définit DBNode, DBLink, NodeType, LinkType.
+ │    └── VisualLinkType.ts
+ │         - Définit structure d’un VisualLink (id, source, target, type, metadata).
+ │
+ ├── db/
+ │    ├── localDB.ts
+ │    │    - IndexedDB (idb).
+ │    │    - Stores : nodes, links, visual_links.
+ │    │    - CRUD génériques, import/export JSON.
+ │    │
+ │    ├── remoteDB.ts
+ │    │    - Supabase.
+ │    │    - fetchNodes/Links/VisualLinks.
+ │    │    - CRUD nodes, links, visualLinks.
+ │    │
+ │    └── sync.ts
+ │         - pushLocalToRemote : purge remote puis copie local.
+ │         - pullRemoteToLocal : purge local puis copie remote.
+ │         - initRealtimeSync : placeholder.
+ │
+ └── lib/
+      └── supabase.ts (client supabase)

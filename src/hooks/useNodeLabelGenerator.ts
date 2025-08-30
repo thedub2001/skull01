@@ -1,3 +1,4 @@
+// hooks/useNodeLabelGenerator.ts
 /**
  * Hook pour générer des labels canvas pour les nodes 3D
  */
@@ -23,4 +24,3 @@
   
     return generateTextLabel;
   }
-  

@@ -1,3 +1,4 @@
+// hooks/useCameraTracker.ts
 import { useEffect, useState, useRef } from 'react';
 
 type CameraPosition = { x: number; y: number; z: number };
