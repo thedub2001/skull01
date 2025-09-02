@@ -68,6 +68,9 @@
  │         - Définit structure d’un VisualLink (id, source, target, type, metadata).
  │
  ├── db/
+ │    ├── adapter.ts
+ │    │    - switch between DbMode = "local" | "remote" | "sync";
+ │    │
  │    ├── localDB.ts
  │    │    - IndexedDB (idb).
  │    │    - Stores : nodes, links, visual_links.
