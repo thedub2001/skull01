@@ -1,47 +1,48 @@
 // App.tsx
-import React from "react";
-import { create, Workbench, molecule } from "@dtinsight/molecule";
-import { IContributeType, IExtension } from '@dtinsight/molecule/esm/model';
+
 import { IExtensionService } from '@dtinsight/molecule/esm/services';
 import "@dtinsight/molecule/esm/style/mo.css";
+// App.tsx
+import React from "react";
+import { create, Workbench } from "@dtinsight/molecule";
+import type { IExtension, IPanelItem } from "@dtinsight/molecule/esm/model"; // même source
+import "@dtinsight/molecule/esm/style/mo.css";
+import GraphApp from "./GraphApp";
 
-import GraphApp from "./GraphApp"; // ← ton app actuelle déplacée ici (SettingsPanel+GraphWrapper+InfoPanel)
+const panel: IPanelItem = {
+  id: "graph.panel",
+  name: "Graph Panel",
+  title: "Graph Panel",
+  renderPane: () => {
+    console.log("[molecule][panel] rendering GraphApp");
+    return <GraphApp />;
+  },
+};
 
-console.log("[molecule][init] starting App.tsx");
-
-// --- Extension Molecule ---
-// On crée un panneau central pour afficher GraphApp
 const GraphExtension: IExtension = {
   id: "graph.extension",
   name: "Graph Extension",
-  activate(extensionCtx: IExtensionService) {
-    console.log("[molecule][activate] GraphExtension activée");
-
-    molecule.panel.add({
-      id: "graph.panel",
-      name: "Graph Panel",
-      render: () => {
-        console.log("[molecule][render] GraphPanel rendu");
-        return <GraphApp />;
-      },
+  activate() {
+    console.log("[molecule][activate] GraphExtension activated");
+    import("@dtinsight/molecule").then(({ molecule }) => {
+      molecule.panel.add(panel);
+      molecule.panel.setActive(panel.id);
     });
-
-    // Option : sélectionner ce panel au démarrage
-    molecule.panel.setActive("graph.panel");
   },
-  dispose(extensionCtx: IExtensionService) {
-    console.log("[molecule][dispose] GraphExtension supprimée");
+  dispose() {
+    console.log("[molecule][dispose] GraphExtension disposed");
+    import("@dtinsight/molecule").then(({ molecule }) => {
+      molecule.panel.remove(panel.id);
+    });
   },
 };
 
-// --- Création Molecule ---
 const moInstance = create({
   extensions: [GraphExtension],
 });
+console.log("[molecule][init] create done");
 
-const App = () => {
-  console.log("[molecule][render] App rendu");
+export default function App() {
+  console.log("[molecule][render] App rendered");
   return moInstance.render(<Workbench />);
-};
-
-export default App;
+}
