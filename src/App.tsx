@@ -20,7 +20,7 @@ const GraphExtension: IExtension = {
     molecule.panel.add({
       id: "graph.panel",
       name: "Graph Panel",
-      renderPane: () => {
+      render: () => {
         console.log("[molecule][render] GraphPanel rendu");
         return <GraphApp />;
       },
