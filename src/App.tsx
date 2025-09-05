@@ -1,17 +1,23 @@
+// App.tsx
 import React from 'react';
 import { create, Workbench } from '@dtinsight/molecule';
 import molecule from '@dtinsight/molecule';
 import type { IExtension, IFolderTreeNodeProps } from '@dtinsight/molecule/esm/model';
 import type { IExtensionService } from '@dtinsight/molecule/esm/services';
+import MDPreview from './components/MDPreview';
 import '@dtinsight/molecule/esm/style/mo.css';
 
-// Extension complète pour gérer l'éditeur Monaco avec FolderTree
+const LEFT_PANEL_ID = 1;
+const RIGHT_PANEL_ID = 2;
+
+// Extension complète pour gérer l'éditeur Monaco avec FolderTree et Preview Markdown
 class EditorManagementExtension implements IExtension {
     id = 'EditorManagementExtension';
-    name = 'Gestion Éditeur Monaco avec FolderTree';
+    name = 'Gestion Éditeur Monaco avec FolderTree et Markdown Preview';
+    private currentMarkdownTabId: string | null = null;
 
     activate(extensionCtx: IExtensionService) {
-        console.log('📝 Extension Éditeur avec FolderTree activée');
+        console.log('📝 Extension Éditeur avec FolderTree et Markdown Preview activée');
 
         this.initFolderTreeWithSampleFiles();
         this.setupFolderTreeEvents();
@@ -194,6 +200,10 @@ Les fichiers suivants fonctionnent parfaitement :
 2. Testez les fonctionnalités une par une
 3. Utilisez la console pour débugger
 
+## Live Preview
+
+Ce fichier Markdown dispose maintenant d'une **prévisualisation en temps réel** ! 🎉
+
 Bon développement !`,
                                 language: 'markdown'
                             }
@@ -295,13 +305,20 @@ Bon développement !`,
                     location: '/workspace/README.md',
                     isLeaf: true,
                     data: {
-                        value: `# Molecule Demo
+                        value: `# Molecule Demo avec Markdown Preview
 
-Ceci est un projet de démonstration pour explorer les fonctionnalités de **Molecule**.
+Ceci est un projet de démonstration pour explorer les fonctionnalités de **Molecule** avec prévisualisation Markdown en temps réel.
 
 ## Qu'est-ce que Molecule ?
 
 Molecule est un framework UI léger inspiré de VSCode qui permet de créer des IDE web modernes et extensibles.
+
+## ✨ Nouvelles fonctionnalités
+
+### 📋 Live Markdown Preview
+- Prévisualisation en temps réel des fichiers Markdown
+- Panneau double avec éditeur à gauche et preview à droite
+- Synchronisation automatique lors de l'édition
 
 ## Fonctionnalités incluses
 
@@ -342,6 +359,13 @@ const moInstance = create({
 const App = () => moInstance.render(<Workbench />);
 \`\`\`
 
+## 🎯 Comment utiliser la prévisualisation Markdown
+
+1. Ouvrez un fichier \`.md\` depuis l'explorateur
+2. L'éditeur s'ouvre automatiquement dans le panneau de gauche
+3. La prévisualisation apparaît dans le panneau de droite
+4. Tapez du Markdown - la preview se met à jour en temps réel !
+
 ## Raccourcis clavier
 
 - **Ctrl/Cmd + S**: Sauvegarder
@@ -359,8 +383,10 @@ workspace/
 ├── src/
 │   ├── example.ts     # Exemple TypeScript
 │   └── styles.css     # Styles CSS
+├── docs/
+│   └── guide.md       # Guide Markdown avec preview
 ├── public/
-│   └── index.html     # Page HTML
+│   └── demo.html      # Page HTML
 ├── package.json       # Configuration du projet
 └── README.md          # Ce fichier
 \`\`\`
@@ -389,6 +415,7 @@ Bon développement avec Molecule ! 🚀`,
     private setupFolderTreeEvents() {
         molecule.folderTree.onSelectFile((file: IFolderTreeNodeProps) => {
             if (file.isLeaf && file.data) {
+                // Ouvrir le fichier dans l'éditeur principal (panneau gauche)
                 molecule.editor.open({
                     id: file.id,
                     name: file.name,
@@ -398,25 +425,21 @@ Bon développement avec Molecule ! 🚀`,
                         { id: 'root', name: 'Workspace' },
                         { id: file.id, name: file.name },
                     ],
-                });
+                }, LEFT_PANEL_ID);
+
+                // Si c'est un fichier Markdown, ouvrir aussi la prévisualisation
+                if (this.isMarkdownFile(file.name)) {
+                    this.openMarkdownPreview(file.id, file.name);
+                }
             }
         });
 
         molecule.folderTree.onRemove((nodeId) => {
-            const groupId = this.getGroupIdByTabId(nodeId);
-            if (groupId) {
-                molecule.editor.closeTab(nodeId, groupId);
-            }
+            this.handleFileRemove(nodeId);
         });
 
         molecule.folderTree.onRename((nodeId, name) => {
-            const groupId = this.getGroupIdByTabId(nodeId);
-            if (groupId) {
-                const tab = molecule.editor.getTabById(nodeId, groupId);
-                if (tab) {
-                    molecule.editor.updateTab({ ...tab, name }, groupId);
-                }
-            }
+            this.handleFileRename(nodeId, name);
         });
     }
 
@@ -427,17 +450,36 @@ Bon développement avec Molecule ! 🚀`,
 
         molecule.editor.onCloseTab((tabId, groupId) => {
             console.log('❌ Onglet fermé:', { tabId, groupId });
+            
+            // Si on ferme un fichier Markdown, fermer aussi sa prévisualisation
+            if (groupId === LEFT_PANEL_ID && tabId === this.currentMarkdownTabId) {
+                this.closeMarkdownPreview();
+            }
         });
 
         molecule.editor.onSelectTab((tabId, groupId) => {
             const currentTab = molecule.editor.getTabById(tabId, groupId);
             if (currentTab) {
                 console.log('👆 Onglet sélectionné:', currentTab);
+                
+                // Si on sélectionne un fichier Markdown, s'assurer que la prévisualisation est ouverte
+                if (groupId === LEFT_PANEL_ID && this.isMarkdownFile(currentTab.name)) {
+                    if (this.currentMarkdownTabId !== tabId) {
+                        this.openMarkdownPreview(tabId, currentTab.name);
+                    }
+                }
+                // Si on sélectionne un fichier non-Markdown, fermer la prévisualisation
+                else if (groupId === LEFT_PANEL_ID && !this.isMarkdownFile(currentTab.name)) {
+                    this.closeMarkdownPreview();
+                }
             }
         });
 
         molecule.editor.onUpdateTab((tab) => {
             console.log('🔄 Onglet mis à jour:', tab);
+            
+            // Si c'est le fichier Markdown actuel qui est mis à jour, 
+            // la prévisualisation se mettra à jour automatiquement via MDPreview
         });
     }
 
@@ -458,6 +500,78 @@ Bon développement avec Molecule ! 🚀`,
 
     private setupCustomActions() {
         console.log('⚡ Actions personnalisées activées');
+    }
+
+    // --- Méthodes Markdown Preview ---
+
+    private isMarkdownFile(fileName: string): boolean {
+        return fileName.toLowerCase().endsWith('.md');
+    }
+
+    private openMarkdownPreview(tabId: string, fileName: string) {
+        console.log('🔍 Ouverture de la prévisualisation Markdown pour:', fileName);
+        
+        // Fermer l'ancienne prévisualisation si elle existe
+        this.closeMarkdownPreview();
+        
+        // Ouvrir la nouvelle prévisualisation
+        const previewTab = {
+            id: `${tabId}-preview`,
+            name: `Preview: ${fileName}`,
+            closable: true,
+            icon: 'eye',
+            renderPane: () => <MDPreview />,
+        };
+        
+        molecule.editor.open(previewTab, RIGHT_PANEL_ID);
+        this.currentMarkdownTabId = tabId;
+    }
+
+    private closeMarkdownPreview() {
+        if (this.currentMarkdownTabId) {
+            const previewTabId = `${this.currentMarkdownTabId}-preview`;
+            molecule.editor.closeTab(previewTabId, RIGHT_PANEL_ID);
+            this.currentMarkdownTabId = null;
+            console.log('❌ Prévisualisation Markdown fermée');
+        }
+    }
+
+    // --- Gestion des fichiers ---
+
+    private handleFileRemove(nodeId: string) {
+        // Fermer l'onglet de l'éditeur principal
+        const groupId = this.getGroupIdByTabId(nodeId);
+        if (groupId) {
+            molecule.editor.closeTab(nodeId, groupId);
+        }
+
+        // Si c'était un fichier Markdown, fermer aussi la prévisualisation
+        if (nodeId === this.currentMarkdownTabId) {
+            this.closeMarkdownPreview();
+        }
+    }
+
+    private handleFileRename(nodeId: string, name: string) {
+        // Mise à jour dans l'éditeur principal
+        const groupId = this.getGroupIdByTabId(nodeId);
+        if (groupId) {
+            const tab = molecule.editor.getTabById(nodeId, groupId);
+            if (tab) {
+                molecule.editor.updateTab({ ...tab, name }, groupId);
+            }
+        }
+
+        // Mise à jour de la prévisualisation si c'est le fichier Markdown actuel
+        if (nodeId === this.currentMarkdownTabId) {
+            const previewTabId = `${nodeId}-preview`;
+            const previewTab = molecule.editor.getTabById(previewTabId, RIGHT_PANEL_ID);
+            if (previewTab) {
+                molecule.editor.updateTab({
+                    ...previewTab,
+                    name: `Preview: ${name}`
+                }, RIGHT_PANEL_ID);
+            }
+        }
     }
 
     // --- Utils ---
@@ -520,7 +634,7 @@ const moInstance = create({
 
 const App: React.FC = () => {
     React.useEffect(() => {
-        console.log('🎬 Application montée');
+        console.log('🎬 Application montée avec Markdown Preview');
     }, []);
 
     return moInstance.render(<Workbench />);
