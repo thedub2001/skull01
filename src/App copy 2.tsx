@@ -1,24 +1,24 @@
-// App.tsx 
+// App.tsx
 import React from 'react';
 import { create, Workbench } from '@dtinsight/molecule';
 import molecule from '@dtinsight/molecule';
 import type { IExtension, IFolderTreeNodeProps } from '@dtinsight/molecule/esm/model';
 import type { IExtensionService } from '@dtinsight/molecule/esm/services';
+import MDPreview from './components/MDPreview';   // <== ton composant existant
 import '@dtinsight/molecule/esm/style/mo.css';
 
-// Extension complète pour gérer l'éditeur Monaco avec FolderTree
+const LEFT_PANEL_ID = 1;
+const RIGHT_PANEL_ID = 2;
+
 class EditorManagementExtension implements IExtension {
     id = 'EditorManagementExtension';
-    name = 'Gestion Éditeur Monaco avec FolderTree';
+    name = 'Gestion Éditeur Monaco avec FolderTree + Markdown Preview';
 
     activate(extensionCtx: IExtensionService) {
-        console.log('📝 Extension Éditeur avec FolderTree activée');
-
+        console.log('📝 Extension activée');
         this.initFolderTreeWithSampleFiles();
         this.setupFolderTreeEvents();
         this.setupEditorEvents();
-        this.addExplorerActions();
-        this.setupCustomActions();
     }
 
     private initFolderTreeWithSampleFiles() {
@@ -195,6 +195,10 @@ Les fichiers suivants fonctionnent parfaitement :
 2. Testez les fonctionnalités une par une
 3. Utilisez la console pour débugger
 
+## Live Preview
+
+Ce fichier Markdown dispose maintenant d'une **prévisualisation en temps réel** ! 🎉
+
 Bon développement !`,
                                 language: 'markdown'
                             }
@@ -296,13 +300,20 @@ Bon développement !`,
                     location: '/workspace/README.md',
                     isLeaf: true,
                     data: {
-                        value: `# Molecule Demo
+                        value: `# Molecule Demo avec Markdown Preview
 
-Ceci est un projet de démonstration pour explorer les fonctionnalités de **Molecule**.
+Ceci est un projet de démonstration pour explorer les fonctionnalités de **Molecule** avec prévisualisation Markdown en temps réel.
 
 ## Qu'est-ce que Molecule ?
 
 Molecule est un framework UI léger inspiré de VSCode qui permet de créer des IDE web modernes et extensibles.
+
+## ✨ Nouvelles fonctionnalités
+
+### 📋 Live Markdown Preview
+- Prévisualisation en temps réel des fichiers Markdown
+- Panneau double avec éditeur à gauche et preview à droite
+- Synchronisation automatique lors de l'édition
 
 ## Fonctionnalités incluses
 
@@ -343,6 +354,13 @@ const moInstance = create({
 const App = () => moInstance.render(<Workbench />);
 \`\`\`
 
+## 🎯 Comment utiliser la prévisualisation Markdown
+
+1. Ouvrez un fichier \`.md\` depuis l'explorateur
+2. L'éditeur s'ouvre automatiquement dans le panneau de gauche
+3. La prévisualisation apparaît dans le panneau de droite
+4. Tapez du Markdown - la preview se met à jour en temps réel !
+
 ## Raccourcis clavier
 
 - **Ctrl/Cmd + S**: Sauvegarder
@@ -360,8 +378,10 @@ workspace/
 ├── src/
 │   ├── example.ts     # Exemple TypeScript
 │   └── styles.css     # Styles CSS
+├── docs/
+│   └── guide.md       # Guide Markdown avec preview
 ├── public/
-│   └── index.html     # Page HTML
+│   └── demo.html      # Page HTML
 ├── package.json       # Configuration du projet
 └── README.md          # Ce fichier
 \`\`\`
@@ -387,127 +407,63 @@ Bon développement avec Molecule ! 🚀`,
         console.log('🔄 Tri automatique activé');
     }
 
-    private setupFolderTreeEvents() {
+   private setupFolderTreeEvents() {
         molecule.folderTree.onSelectFile((file: IFolderTreeNodeProps) => {
             if (file.isLeaf && file.data) {
+                // ouverture normale à gauche
                 molecule.editor.open({
                     id: file.id,
                     name: file.name,
                     data: file.data,
                     icon: this.getFileIcon(file.name),
-                    breadcrumb: [
-                        { id: 'root', name: 'Workspace' },
-                        { id: file.id, name: file.name },
-                    ],
-                });
-            }
-        });
+                }, LEFT_PANEL_ID);
 
-        molecule.folderTree.onRemove((nodeId) => {
-            const groupId = this.getGroupIdByTabId(nodeId);
-            if (groupId) {
-                molecule.editor.closeTab(nodeId, groupId);
-            }
-        });
-
-        molecule.folderTree.onRename((nodeId, name) => {
-            const groupId = this.getGroupIdByTabId(nodeId);
-            if (groupId) {
-                const tab = molecule.editor.getTabById(nodeId, groupId);
-                if (tab) {
-                    molecule.editor.updateTab({ ...tab, name }, groupId);
+                // si c'est un .md → ouvrir preview à droite
+                if (file.name.endsWith('.md')) {
+                    const previewTab = {
+                        id: `preview-${file.id}`,
+                        name: 'Preview',
+                        closable: true,
+                        renderPane: () => (
+                            <MDPreview fileId={file.id} />
+                        ),
+                    };
+                    molecule.editor.open(previewTab, RIGHT_PANEL_ID);
                 }
             }
         });
     }
 
     private setupEditorEvents() {
-        molecule.editor.onOpenTab((tab) => {
-            console.log('📂 Onglet ouvert:', tab);
-        });
-
-        molecule.editor.onCloseTab((tabId, groupId) => {
-            console.log('❌ Onglet fermé:', { tabId, groupId });
-        });
-
-        molecule.editor.onSelectTab((tabId, groupId) => {
-            const currentTab = molecule.editor.getTabById(tabId, groupId);
-            if (currentTab) {
-                console.log('👆 Onglet sélectionné:', currentTab);
-            }
-        });
-
+        // écouter les updates pour mettre à jour la preview
         molecule.editor.onUpdateTab((tab) => {
-            console.log('🔄 Onglet mis à jour:', tab);
-        });
-    }
+            if (tab && tab.data?.language === 'markdown') {
+                console.log('[preview][update]', tab);
 
-    private addExplorerActions() {
-        molecule.explorer.addAction({
-            id: 'refresh-action',
-            name: 'Rafraîchir',
-            icon: 'refresh',
-            title: 'Rafraîchir l\'arbre',
-        });
-
-        molecule.explorer.onPanelToolbarClick((panel, toolbarId) => {
-            if (toolbarId === 'refresh-action') {
-                this.refreshFolderTree();
+                // on force un refresh du composant Preview en recréant l’onglet
+                const previewId = `preview-${tab.id}`;
+                const existing = molecule.editor.getTabById(previewId, RIGHT_PANEL_ID);
+                if (existing) {
+                    molecule.editor.updateTab(
+                        { ...existing, renderPane: () => <MDPreview fileId={tab.id} /> },
+                        RIGHT_PANEL_ID
+                    );
+                }
             }
         });
-    }
-
-    private setupCustomActions() {
-        console.log('⚡ Actions personnalisées activées');
-    }
-
-    // --- Utils ---
-
-    private refreshFolderTree() {
-        console.log('🔄 Rafraîchir FolderTree');
     }
 
     private getFileIcon(fileName: string): string {
         const ext = fileName.split('.').pop()?.toLowerCase();
         switch (ext) {
-            case 'ts':
-            case 'tsx':
-                return 'symbol-class';
-            case 'js':
-                return 'symbol-method';
-            case 'css':
-                return 'symbol-color';
-            case 'md':
-                return 'markdown';
-            case 'json':
-                return 'symbol-property';
-            case 'html':
-                return 'symbol-misc';
-            default:
-                return 'file';
+            case 'md': return 'markdown';
+            case 'ts': return 'symbol-class';
+            case 'css': return 'symbol-color';
+            case 'json': return 'symbol-property';
+            case 'html': return 'symbol-misc';
+            case 'js': return 'symbol-method';
+            default: return 'file';
         }
-    }
-
-    /**
-     * Récupère le groupId d'un onglet ouvert à partir de son tabId.
-     * Si non trouvé, retourne le groupId de l'onglet actif.
-     */
-    private getGroupIdByTabId(tabId: string): string | undefined {
-        const state = molecule.editor.getState();
-
-        // Chercher directement le tabId dans chaque groupe
-        for (const group of state.groups) {
-            if (group.data?.some((t) => t.id === tabId)) {
-                return group.id as string;
-            }
-        }
-
-        // Sinon, fallback : prendre le groupId actif
-        if (state.current?.tab?.id) {
-            return state.current.group?.id as string;
-        }
-
-        return undefined;
     }
 
     dispose() {
@@ -520,10 +476,6 @@ const moInstance = create({
 });
 
 const App: React.FC = () => {
-    React.useEffect(() => {
-        console.log('🎬 Application montée');
-    }, []);
-
     return moInstance.render(<Workbench />);
 };
 

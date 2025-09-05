@@ -1,18 +1,53 @@
-import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import { connect } from '@dtinsight/molecule/esm/react';
+// components/MDPreview.tsx
+import React, { useEffect, useState } from 'react';
 import molecule from '@dtinsight/molecule';
+import ReactMarkdown from 'react-markdown';
 
-const LEFT_PANEL_ID = 1;
+interface MDPreviewProps {
+    fileId: string;
+}
 
-const MDPreview = connect(molecule.editor, ({ groups = [] }) => {
-    const mdGroup = groups.find((group: any) => group.id === LEFT_PANEL_ID) || {};
-    const mdText = mdGroup?.tab?.data?.value || '';
+/**
+ * Composant Preview Markdown
+ * - Affiche en temps réel le contenu du fichier markdown ouvert dans Molecule
+ * - Se met à jour automatiquement sur les modifications de l'éditeur
+ */
+const MDPreview: React.FC<MDPreviewProps> = ({ fileId }) => {
+    const [content, setContent] = useState<string>("");
+
+    // Récupère la valeur initiale
+    useEffect(() => {
+        const tab = molecule.editor.getTabById(fileId, 1);
+        if (tab?.data?.value) {
+            setContent(tab.data.value as string);
+        }
+    }, [fileId]);
+
+    // Écoute les mises à jour des tabs
+useEffect(() => {
+    const disposable = molecule.editor.onUpdateTab?.((tab) => {
+        if (tab.id === fileId && tab.data?.language === "markdown") {
+            console.log(`[preview][update] ${fileId}`, tab.data.value);
+            setContent(tab.data.value as string);
+        }
+    });
+
+    return () => {
+        if (disposable?.dispose) {
+            console.debug("[preview][cleanup] disposing listener");
+            disposable.dispose();
+        } else {
+            console.debug("[preview][cleanup] nothing to dispose");
+        }
+    };
+}, [fileId]);
+
+
     return (
-        <div style={{ padding: 10, overflowY: 'auto', height: '100%' }}>
-            <ReactMarkdown>{mdText}</ReactMarkdown>
+        <div style={{ padding: "1rem", height: "100%", overflow: "auto" }}>
+            <ReactMarkdown>{content}</ReactMarkdown>
         </div>
     );
-});
+};
 
 export default MDPreview;
