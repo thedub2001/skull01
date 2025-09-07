@@ -1,6 +1,6 @@
 // components/SettingsPanel.tsx
 import React, { useState } from "react";
-import { useSettings } from "../context/SettingsContext";
+import { useMoleculeSettings } from "../hooks/useMoleculeSettings";
 
 const SettingsPanel: React.FC = () => {
   const {
@@ -15,7 +15,7 @@ const SettingsPanel: React.FC = () => {
     setDbMode,
     pushLocalToRemote,
     pullRemoteToLocal,
-  } = useSettings();
+  } = useMoleculeSettings();
 
   const [isOpen, setIsOpen] = useState(true);
 

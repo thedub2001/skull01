@@ -1,37 +1,37 @@
+// extensions/SettingsExtension.ts
 import molecule from '@dtinsight/molecule';
 import type { IExtension } from '@dtinsight/molecule/esm/model';
 import type { IExtensionService } from '@dtinsight/molecule/esm/molecule.api';
 
-export const customSettings = {
-    demo: {
-        id: 'test',
-        value:65
-    }
-}
+// Clé localStorage
+const STORAGE_KEY = "myApp.settings";
+
+// Valeurs par défaut (à adapter selon ton projet)
+const defaultSettings = {
+  dbMode: "local",      // "local" | "remote" | "sync"
+  hueStep: 30,
+  showLabels: true,
+  linkTypeFilter: [] as string[],
+};
 
 export class SettingsExtension implements IExtension {
+  id = "ExtendSettings";
+  name = "Extend Settings";
 
-    id: string = 'ExtendSettings';
-    name: string = 'Extend Settings';
+  activate(extensionCtx: IExtensionService): void {
+    // 1. Charger settings depuis localStorage si dispo
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const parsed = saved ? JSON.parse(saved) : {};
+    const initialSettings = { ...defaultSettings, ...parsed };
 
-    appendSettingsItems() {
-        molecule.settings.append(customSettings);
-    }
+    // 2. Injecter dans Molecule
+    molecule.settings.append(initialSettings);
 
-    handleSettingsChange() {
-        const panel = molecule.panel;
-        molecule.settings.onChangeSettings((settings: any) => {
-            panel.appendOutput('The settings changed: \n');
-            panel.appendOutput(JSON.stringify(settings));
-            alert('Settings changed:' + settings.demo?.id)
-        })
-    }
+    // 3. Écouter changements et sauvegarder
+    molecule.settings.onChangeSettings((newSettings) => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+    });
+  }
 
-    activate(extensionCtx: IExtensionService): void {
-        this.appendSettingsItems();
-        this.handleSettingsChange();
-    }
-
-    dispose(extensionCtx: IExtensionService): void {
-    }
+  dispose(extensionCtx: IExtensionService): void {}
 }

@@ -1,14 +1,14 @@
 // hooks/useNodes.ts
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { useSettings } from "../context/SettingsContext";
+import { useMoleculeSettings } from "../hooks/useMoleculeSettings";
 import type { NodeType } from "../types/graph";
 import * as localDB from "../db/localDB";
 import * as remoteDB from "../db/remoteDB";
 import { pullRemoteToLocal } from "../db/sync";
 
 export function useNodes() {
-  const { dbMode } = useSettings();
+  const { dbMode } = useMoleculeSettings();
   const [nodes, setNodes] = useState<NodeType[]>([]);
 
   /** Fetch complet */

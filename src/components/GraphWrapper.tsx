@@ -2,7 +2,7 @@
 import React, { useMemo } from "react";
 import ForceGraph3D from "react-force-graph-3d";
 import { useVisualLinksRenderer } from "../hooks/useVisualLinksRenderer";
-import { useSettings } from "../context/SettingsContext";
+import { useMoleculeSettings } from "../hooks/useMoleculeSettings";
 import type { NodeType, LinkType } from "../types/graph";
 import type { VisualLinkType } from "../types/VisualLinkType";
 import type { ForceGraphMethods } from "react-force-graph-3d";
@@ -33,7 +33,7 @@ export default function GraphWrapper({
   onLinkClick,
   visualLinks,
 }: Props) {
-  const { hueStep, showLabels, linkTypeFilter } = useSettings();
+  const { hueStep, showLabels, linkTypeFilter } = useMoleculeSettings();
 
   // --- Visual links rendering ---
   useVisualLinksRenderer({
