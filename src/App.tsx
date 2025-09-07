@@ -13,7 +13,7 @@ const moInstance = create({
         new ExplorerExtension(),
         new EditorEventsExtension(),
         new MenuBarExtension(),
-        new GithubActivityBarExtension(),
+        GithubActivityBarExtension,
         ExtendLocales,
     ],
 });
