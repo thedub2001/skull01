@@ -6,6 +6,7 @@ import { ExplorerExtension } from './extensions/ExplorerExtension';
 import { EditorEventsExtension } from './extensions/EditorEventsExtension';
 import { MenuBarExtension } from './extensions/MenuBarExtension';
 import { GithubActivityBarExtension } from './extensions/GithubActivityBarExtension';
+import { ExtendLocales } from './extensions/i18nExtension';
 
 const moInstance = create({
     extensions: [
@@ -13,6 +14,7 @@ const moInstance = create({
         new EditorEventsExtension(),
         new MenuBarExtension(),
         new GithubActivityBarExtension(),
+        ExtendLocales,
     ],
 });
 
