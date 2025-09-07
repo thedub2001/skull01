@@ -8,6 +8,7 @@ import { MenuBarExtension } from './extensions/MenuBarExtension';
 import { GithubActivityBarExtension } from './extensions/GithubActivityBarExtension';
 import { ExtendLocales } from './extensions/i18nExtension';
 import { ProblemsExtension } from './extensions/ProblemsExtension';
+import { SettingsExtension } from './extensions/SettingsExtension';
 
 const moInstance = create({
     extensions: [
@@ -17,6 +18,7 @@ const moInstance = create({
         GithubActivityBarExtension,
         ExtendLocales,
         new ProblemsExtension(),
+        new SettingsExtension(),
     ],
 });
 
