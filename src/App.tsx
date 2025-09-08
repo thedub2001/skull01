@@ -9,7 +9,8 @@ import { GithubActivityBarExtension } from './extensions/GithubActivityBarExtens
 import { ExtendLocales } from './extensions/i18nExtension';
 import { ProblemsExtension } from './extensions/ProblemsExtension';
 import { SettingsExtension } from './extensions/SettingsExtension';
-import { AppExtension } from './extensions/3DApp';
+import { AppExtension } from './extensions/3DApp/DataSourceExtension';
+import { AuxiliaryBarExtension } from './extensions/AuxiliaryBarExtension';
 
 const moInstance = create({
     extensions: [
@@ -21,6 +22,7 @@ const moInstance = create({
         new ProblemsExtension(),
         new SettingsExtension(),
         new AppExtension(),
+        new AuxiliaryBarExtension(),
     ],
 });
 

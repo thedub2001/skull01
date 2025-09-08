@@ -1,61 +1,74 @@
-import http from "../../common/http";
 import type { DataSourceType } from "./types";
+import folderTree from "./folderTree.json";
+import dataSource from "./dataSource.json";
 
-const basePath = './mock';
+/**
+ * Recherche récursive dans un arbre JSON
+ */
+function searchTree(node: any, query: string, result: any[]) {
+    if (!node) return;
+    const target = node.name || "";
+    if (target.includes(query) || query.includes(target)) {
+        console.log("[search] match trouvé:", target);
+        result.push(node);
+    }
+    if (node.children) {
+        node.children.forEach((item: any) => searchTree(item, query, result));
+    }
+}
 
 const api = {
     getFolderTree() {
-        return http.get(`${basePath}/folderTree.json`);
+        console.log("[api] getFolderTree →", folderTree);
+        return folderTree;
     },
 
     search(value: string) {
-        return http.get(`${basePath}/folderTree.json`, { query: value });
+        console.log("[api] search value:", value);
+        const result: any[] = [];
+        searchTree(folderTree, value, result);
+        console.log("[api] search result:", result);
+        return result;
     },
 
     getDataSource() {
-        return http.get(`${basePath}/dataSource.json`);
+        console.log("[api] getDataSource →", dataSource);
+        return dataSource;
     },
 
     getDataSourceById(sourceId: string): Promise<DataSourceType> {
-        return new Promise<DataSourceType>((resolve, reject) => {
+        console.log("[api] getDataSourceById id:", sourceId);
+        return new Promise<DataSourceType>((resolve) => {
             const mockDataSource: DataSourceType = {
                 id: sourceId,
-                name: `dataSource` + sourceId,
-                type: 'MySQL',
-                jdbcUrl: 'http://jdbc:127.0.0.1//3306',
-                updateTime: Date.now() + ''
-            }
-            resolve(mockDataSource)
+                name: `dataSource${sourceId}`,
+                type: "MySQL",
+                jdbcUrl: "http://jdbc:127.0.0.1//3306",
+                updateTime: Date.now() + "",
+            };
+            console.log("[api] getDataSourceById mock →", mockDataSource);
+            resolve(mockDataSource);
         });
     },
 
-    createDataSource(dataSource: Omit<DataSourceType, 'id'>) {
-        return new Promise((resolve, reject) => {
-            resolve({
-                code: 200,
-                message: 'success',
-                data: dataSource
-            })
-        });
+    createDataSource(dataSource: Omit<DataSourceType, "id">) {
+        console.log("[api] createDataSource input:", dataSource);
+        const response = {
+            code: 200,
+            message: "success",
+            data: dataSource,
+        };
+        console.log("[api] createDataSource response:", response);
+        return Promise.resolve(response);
     },
 
-    async query(query: string = '') {
-        const res = await http.get(`${basePath}/folderTree.json`);
+    async query(query: string = "") {
+        console.log("[api] query value:", query);
         const result: any[] = [];
-        const search = (nodeItem: any) => {
-            if (!nodeItem) return;
-            const target = nodeItem.name || '';
-            if (target.includes(query) || query.includes(target)) {
-                result.push(nodeItem);
-            }
-            if (nodeItem.children) {
-                nodeItem.children.forEach((item: any) => { search(item) })
-            }
-        }
-        search(res.data);
-
+        searchTree(folderTree, query, result);
+        console.log("[api] query result:", result);
         return result;
-    }
-}
+    },
+};
 
 export default api;
