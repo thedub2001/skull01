@@ -1,6 +1,6 @@
 // extensions/MarkdownPreviewManager.ts
 import molecule from '@dtinsight/molecule';
-import MDPreview from '../components/MDPreview';
+import MDPreview from '../app/components/MDPreview';
 import React from 'react';
 
 

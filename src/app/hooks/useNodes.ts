@@ -1,7 +1,7 @@
 // hooks/useNodes.ts
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { useMoleculeSettings } from "../hooks/useMoleculeSettings";
+import { useMoleculeSettings } from "./useMoleculeSettings";
 import type { NodeType } from "../types/graph";
 import * as localDB from "../db/localDB";
 import * as remoteDB from "../db/remoteDB";

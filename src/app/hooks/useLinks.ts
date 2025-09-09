@@ -1,7 +1,7 @@
 // hooks/useLinks.ts
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { useMoleculeSettings } from "../hooks/useMoleculeSettings";
+import { useMoleculeSettings } from "./useMoleculeSettings";
 import type { LinkType } from "../types/graph";
 import * as localDB from "../db/localDB";
 import * as remoteDB from "../db/remoteDB";

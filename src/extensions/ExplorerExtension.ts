@@ -3,7 +3,7 @@ import molecule from '@dtinsight/molecule';
 import type { IExtension, IFolderTreeNodeProps } from '@dtinsight/molecule/esm/model';
 import type { IExtensionService } from '@dtinsight/molecule/esm/services';
 import { openMarkdownPreview } from './MarkdownPreviewManager';
-import { mockData } from '../mockData';
+import { mockData } from './mockData';
 
 
 const LEFT_PANEL_ID = 1;
