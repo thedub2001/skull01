@@ -1,4 +1,4 @@
-// src/workbench/AppExtension.tsx
+// src/workbench/MeshExplorerAppExtension.tsx
 import React from "react";
 import molecule from "@dtinsight/molecule";
 import type { IExtension } from "@dtinsight/molecule/esm/model";

@@ -1,3 +1,4 @@
+// app/MeshExplorerAppSideBar.tsx
 import React from 'react';
 import molecule from '@dtinsight/molecule';
 import type { IActivityBarItem, IEditorTab, ISidebarPane, IMenuBarItem } from '@dtinsight/molecule/esm/model';

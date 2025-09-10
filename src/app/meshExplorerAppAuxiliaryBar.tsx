@@ -1,3 +1,4 @@
+// app/MeshExplorerAppAuxiliaryBar.tsx
 import React from 'react';
 import molecule from '@dtinsight/molecule';
 import type { IExtension } from '@dtinsight/molecule/esm/model/extension';

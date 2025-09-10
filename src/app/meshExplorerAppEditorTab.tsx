@@ -1,9 +1,11 @@
+// app/MeshExplorerAppEditorTab.tsx
 import React from 'react';
 import molecule from '@dtinsight/molecule';
 
 import type { IEditorTab } from '@dtinsight/molecule/esm/model';
 import { meshExplorerAuxiliaryBar } from './meshExplorerAppAuxiliaryBar';
 import styled from 'styled-components';
+import Graph3DApp from './components/Graph3DApp';
 
 
 export const MESH_EXPLORER_APP_ID = 'meshExplorerPane';
@@ -63,11 +65,12 @@ class MeshExplorerAppEditorTabView extends React.Component {
         meshExplorerAuxiliaryBar();
     };
 
+    // les boutons ne sont là que pour tester les fonctions associées. normalement le auxiliaryBar s'ouvre lorsque on clique sur un noeud ou un lien
     render() {
         console.log("[CreateDataSourceView] render");
         return (
                     <div>
-                        <CreateDataBtn type="submit">Create</CreateDataBtn>
+                        <Graph3DApp />;
                         <CreateDataBtn type="button" onClick={this.openAuxiliaryBar}>Auxiliary Bar</CreateDataBtn>
                         <CreateDataBtn type="button" onClick={this.close}>Close</CreateDataBtn>
                     </div>
