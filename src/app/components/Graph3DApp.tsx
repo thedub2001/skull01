@@ -46,6 +46,18 @@ export default function Graph3DApp(): JSX.Element {
   const fgRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+    // Parcours toutes les clés du localStorage et log les valeurs
+    console.log("[localStorage] Liste des clés et valeurs :");
+    Object.keys(localStorage).forEach((key) => {
+    try {
+        const value = localStorage.getItem(key);
+        console.log(`- ${key}:`, value);
+    } catch (err) {
+        console.warn(`[localStorage] Impossible de lire la clé "${key}"`, err);
+    }
+    });
+
+
   // Charger le graph au démarrage depuis localStorage, ou initialData sinon
   const [graphData, setGraphData] = useState<GraphData>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
