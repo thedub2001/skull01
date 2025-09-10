@@ -25,7 +25,7 @@ export const dataSourceActivityBar: IActivityBarItem = {
     sortIndex: -1,
     name: 'Data Source',
     title: 'Data Source Management',
-    icon: 'type-hierarchy'
+    icon: 'database'
 };
 
 export const dataSourceSidebar: ISidebarPane = {
@@ -218,7 +218,7 @@ class CreateDataSourceView extends React.Component {
 // =====================
 // Extension
 // =====================
-export class AppExtension implements IExtension {
+export class DataSourceAppExtension implements IExtension {
     id: string = DATA_SOURCE_ID;
     name: string = 'Data Source';
 

@@ -9,8 +9,9 @@ import { GithubActivityBarExtension } from './extensions/GithubActivityBarExtens
 import { ExtendLocales } from './extensions/i18nExtension';
 import { ProblemsExtension } from './extensions/ProblemsExtension';
 import { SettingsExtension } from './extensions/SettingsExtension';
-import { AppExtension } from './extensions/3DApp/DataSourceExtension';
+import { DataSourceAppExtension } from './extensions/dataSourceApp/DataSourceExtension';
 import { AuxiliaryBarExtension } from './extensions/AuxiliaryBarExtension';
+import { MeshExplorerAppExtension } from './extensions/MeshExplorerAppExtension';
 
 const moInstance = create({
     extensions: [
@@ -21,8 +22,9 @@ const moInstance = create({
         ExtendLocales,
         new ProblemsExtension(),
         new SettingsExtension(),
-        new AppExtension(),
+        new DataSourceAppExtension(),
         new AuxiliaryBarExtension(),
+        new MeshExplorerAppExtension(),
     ],
 });
 
