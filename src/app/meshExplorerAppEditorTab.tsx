@@ -68,44 +68,98 @@ function MeshExplorerAppEditorTabView() {
   const generateTextLabel = useNodeLabelGenerator();
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
 
-  useGraphInitialFetch(fetchGraphData, fetchLinks, fetchVisualLinks);
 
+  useGraphInitialFetch(fetchGraphData, fetchLinks, fetchVisualLinks);
+  const showAuxiliaryBar = selectedNodeObjects.length > 0 || selectedLinkObjects.length > 0;
    
-  const openAuxiliaryBar = useCallback(() => meshExplorerAuxiliaryBar({
+  React.useEffect(() => {
+    openAuxiliaryBar();
+  }, [selectedNodeObjects, selectedLinkObjects]);
+
+  const openAuxiliaryBar = useCallback(() => {
+    
+    if (!showAuxiliaryBar) {
+      closeMeshExplorerAuxiliaryBar();
+      return;
+    };
+
+    meshExplorerAuxiliaryBar({
     selectedNodes: selectedNodeObjects,
     selectedLinks: selectedLinkObjects,
     nodes : nodes,
     links :links,
-  }
-  ), [
-        selectedNodeObjects,
-        selectedLinkObjects,
+    onClose: () => {
+      setSelectedNodes(new Set());
+      setSelectedLinks(new Set());
+    },
+    onCreateChildNode: async (parentId) => {
+      await addChildNodeHandler(parentId, nodes, addNode, addLink);
+    },
+    onDeleteNode: async (nodeId) => {
+      await deleteNodeRecursive(
+        nodeId,
         nodes,
         links,
+        deleteNode,
+        deleteLink,
+        visualLinks,
+        removeVisualLink
+      );
+    },
+  });}, [
+    selectedNodes,
+    selectedLinks,
+    selectedNodeObjects,
+    selectedLinkObjects,
+    nodes,
+    links,
+    addNode,
+    addLink,
+    deleteNode,
+    deleteLink,
+    visualLinks,
+    removeVisualLink,
+    showAuxiliaryBar
   ]);
 
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [size, setSize] = React.useState({ width: 0, height: 0 });
+
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        setSize({ width, height });
+        console.log("[GraphWrapper] resize", width, height);
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
 
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
-      <div style={{ flex: 1 }}>
-        <GraphWrapper
-          fgRef={fgRef}
-          graphData={graphData}
-          selectedNodes={selectedNodes}
-          selectedLinks={selectedLinks}
-          setSelectedLinks={setSelectedLinks}
-          getLinkId={getLinkId}
-          nodeThreeObject={nodeThreeObject}
-          onNodeClick={onNodeClick}
-          onLinkClick={onLinkClick}
-          visualLinks={visualLinks}
-        />
-      </div>
-      <div style={{ padding: 8 }}>
-        <ActionBtn onClick={openAuxiliaryBar}>Open Tools</ActionBtn>
-        <ActionBtn onClick={close}>Close Tab</ActionBtn>
-      </div>
+    <div ref={containerRef} style={{
+      width: "100%",
+      height: "100%",   // ← important car la hauteur ne se propage pas naturellement
+      display: "flex",
+      flexDirection: "column",
+    }}>
+      <GraphWrapper
+        fgRef={fgRef}
+        width={size.width}
+        height={size.height}
+        graphData={graphData}
+        selectedNodes={selectedNodes}
+        selectedLinks={selectedLinks}
+        setSelectedLinks={setSelectedLinks}
+        getLinkId={getLinkId}
+        nodeThreeObject={nodeThreeObject}
+        onNodeClick={onNodeClick}
+        onLinkClick={onLinkClick}
+        visualLinks={visualLinks}
+      />
     </div>
   );
 }

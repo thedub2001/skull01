@@ -116,10 +116,8 @@ export function closeMeshExplorerAuxiliaryBar() {
     current: newData.length ? newData[0].key : undefined,
   });
 
-  // Si plus aucun tab, cacher la zone
-  if (!newData.length) {
     molecule.layout.setAuxiliaryBar(true);
-  }
+
   // auxiliaryBarService.setChildren(null); // empty auxiliary bar
   console.log("[auxiliary] closed", auxiliaryBarService.getState());
 }

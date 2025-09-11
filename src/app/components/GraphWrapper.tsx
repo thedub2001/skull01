@@ -1,5 +1,5 @@
 // components/GraphWrapper.tsx
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import ForceGraph3D from "react-force-graph-3d";
 import { useVisualLinksRenderer } from "../hooks/useVisualLinksRenderer";
 import { useMoleculeSettings } from "../hooks/useMoleculeSettings";
@@ -8,9 +8,13 @@ import type { VisualLinkType } from "../types/VisualLinkType";
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import { levelToColor } from "../utils/color";
 import type { JSX } from 'react';
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+
 
 interface Props {
   fgRef: React.MutableRefObject<ForceGraphMethods<NodeType, LinkType> | null>;
+  width: number;
+  height: number;
   graphData: { nodes: NodeType[]; links: LinkType[] };
   selectedNodes: Set<string>;
   selectedLinks: Set<string>;
@@ -22,8 +26,11 @@ interface Props {
   visualLinks: VisualLinkType[];
 }
 
-export default function GraphWrapper({
+export default function GraphWrapper(
+  {
   fgRef,
+  width,
+  height,
   graphData,
   selectedNodes,
   selectedLinks,
@@ -37,6 +44,7 @@ export default function GraphWrapper({
   console.log("[GraphWrapper] Initialisation");
 
   const { hueStep, showLabels, linkTypeFilter } = useMoleculeSettings();
+  
 
   // --- Visual links rendering ---
   useVisualLinksRenderer({
@@ -47,6 +55,18 @@ export default function GraphWrapper({
     setSelectedLinks,
     getLinkId,
   });
+
+  // --- ⚡ Reglage du zoom (moins sensible) ---
+useEffect(() => {
+  if (fgRef.current) {
+    // on caste l'objet en OrbitControls
+    const controls = fgRef.current.controls() as OrbitControls | undefined;
+    if (controls) {
+      controls.zoomSpeed = 0.5; // ← plus lent
+      console.log("[GraphWrapper] Zoom speed réglé sur", controls.zoomSpeed);
+    }
+  }
+}, [fgRef]);
 
   // --- Couleurs des nœuds ---
   const nodeColors = useMemo(() => {
@@ -69,9 +89,14 @@ export default function GraphWrapper({
   const nodeThreeObjectWithLabel = (node: NodeType) =>
     showLabels ? nodeThreeObject(node) : null;
 
+  console.log("[GraphWrapper] width", width);
+  console.log("[GraphWrapper] height", height);
+
   return (
     <ForceGraph3D
       ref={fgRef}
+            width={width}    // ← important
+      height={height}  // ← important
       graphData={graphData}
       backgroundColor="#222"
       linkWidth={(link) => (selectedLinks.has(getLinkId(link)) ? 6 : 2)}
