@@ -8,6 +8,7 @@ import isEqual from "fast-deep-equal";
  * Retourne un objet { nodes, links } à passer au ForceGraph3D.
  */
 export function useGraphDataSync(nodes: NodeType[], links: LinkType[]) {
+  console.log("use graph data sync");
   const [graphData, setGraphData] = useState<{ nodes: NodeType[]; links: LinkType[] }>({
     nodes: [],
     links: [],

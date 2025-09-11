@@ -7,6 +7,7 @@ import type { NodeType, LinkType } from "../types/graph";
 import type { VisualLinkType } from "../types/VisualLinkType";
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import { levelToColor } from "../utils/color";
+import type { JSX } from 'react';
 
 interface Props {
   fgRef: React.MutableRefObject<ForceGraphMethods<NodeType, LinkType> | null>;
@@ -32,7 +33,9 @@ export default function GraphWrapper({
   onNodeClick,
   onLinkClick,
   visualLinks,
-}: Props) {
+}: Props) : JSX.Element  {
+  console.log("[GraphWrapper] Initialisation");
+
   const { hueStep, showLabels, linkTypeFilter } = useMoleculeSettings();
 
   // --- Visual links rendering ---

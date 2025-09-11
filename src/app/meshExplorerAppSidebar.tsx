@@ -33,9 +33,27 @@ const Toolbar = molecule.component.Toolbar;
 const Collapse = molecule.component.Collapse;
 
 function MeshExplorerAppSidebarView() {
-  const create = useCallback(() => {
-    console.log("[MeshExplorerAppSidebar] open editor tab");
-    molecule.editor.open(meshExplorerAppEditorTab);
+  const openEditorTab = useCallback(() => {
+    const state = molecule.editor.getState();
+
+
+    const exists = state.current?.tabs?.some(
+      tab => tab.id === meshExplorerAppEditorTab.id
+    );
+
+    if (!exists) {
+      molecule.editor.open(meshExplorerAppEditorTab);
+    } else {
+    const groupId = state.current?.id;
+
+    if (!groupId) {
+      console.warn("[meshExplorer] Aucun groupe actif dans l’éditeur");
+      return;
+    }
+
+      // rendre actif le tab existant
+      molecule.editor.setActive(groupId, meshExplorerAppEditorTab.id!);
+    }
   }, []);
 
   return (
@@ -45,8 +63,8 @@ function MeshExplorerAppSidebarView() {
         toolbar={
           <Toolbar
             data={[
-              { icon: "refresh", id: "reload", title: "Reload", onClick: create },
-              { icon: "add", id: "showMesh", title: "Show Mesh", onClick: create },
+              { icon: "refresh", id: "reload", title: "Reload", onClick: openEditorTab },
+              { icon: "add", id: "showMesh", title: "Show Mesh", onClick: openEditorTab },
             ]}
           />
         }

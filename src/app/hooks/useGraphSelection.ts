@@ -6,6 +6,8 @@ export function useGraphSelection(nodes: NodeType[], links: LinkType[]) {
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
 
+  console.log("use graph selection");
+
   const getLinkId = (link: LinkType): string =>
     `${typeof link.source === "object" ? link.source.id : link.source}|${typeof link.target === "object" ? link.target.id : link.target}`;
 
