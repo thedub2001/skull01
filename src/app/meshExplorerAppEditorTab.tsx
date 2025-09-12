@@ -1,6 +1,5 @@
 // src/app/MeshExplorerAppEditorTab.tsx
-
-import React, { useCallback } from "react";
+import React from "react";
 import molecule from "@dtinsight/molecule";
 import type { IEditorTab } from "@dtinsight/molecule/esm/model";
 import { closeMeshExplorerAuxiliaryBar, meshExplorerAuxiliaryBar } from "./meshExplorerAppAuxiliaryBar";
@@ -36,18 +35,8 @@ export function exitMeshExplorerAppEditorTabView() {
   }
 }
 
-const ActionBtn  = styled(molecule.component.Button)`
-  width: 120px;
-  display: inline-block;
-`;
-
 function MeshExplorerAppEditorTabView() {
-    const close = useCallback(() => {
-        exitMeshExplorerAppEditorTabView();
-        closeMeshExplorerAuxiliaryBar();
-    }, []);
-
-      const { nodes, fetchGraphData, addNode, deleteNode } = useNodes();
+  const { nodes, fetchGraphData, addNode, deleteNode } = useNodes();
   const { links, fetchLinks, addLink, deleteLink } = useLinks();
   const { visualLinks, fetchVisualLinks, addVisualLink, removeVisualLink } = useVisualLinks();
   const {
@@ -61,54 +50,49 @@ function MeshExplorerAppEditorTabView() {
     onNodeClick,
     onLinkClick,
   } = useGraphSelection(nodes, links);
- const fgRef = React.useRef<ForceGraphMethods<NodeType, LinkType> | null>(null);
+
+  const fgRef = React.useRef<ForceGraphMethods<NodeType, LinkType> | null>(null);
   const graphData = useGraphDataSync(nodes, links);
 
   const cameraPos = useCameraTracker(fgRef);
   const generateTextLabel = useNodeLabelGenerator();
   const nodeThreeObject = useLabelSprite({ cameraPos, generateTextLabel });
 
-
+  // Initial fetch
   useGraphInitialFetch(fetchGraphData, fetchLinks, fetchVisualLinks);
-  const showAuxiliaryBar = selectedNodeObjects.length > 0 || selectedLinkObjects.length > 0;
-   
-  React.useEffect(() => {
-    openAuxiliaryBar();
-  }, [selectedNodeObjects, selectedLinkObjects]);
 
-  const openAuxiliaryBar = useCallback(() => {
-    
-    if (!showAuxiliaryBar) {
+  // Synchronisation avec l'AuxiliaryBar
+  React.useEffect(() => {
+    if (selectedNodeObjects.length === 0 && selectedLinkObjects.length === 0) {
       closeMeshExplorerAuxiliaryBar();
       return;
-    };
+    }
 
     meshExplorerAuxiliaryBar({
-    selectedNodes: selectedNodeObjects,
-    selectedLinks: selectedLinkObjects,
-    nodes : nodes,
-    links :links,
-    onClose: () => {
-      setSelectedNodes(new Set());
-      setSelectedLinks(new Set());
-    },
-    onCreateChildNode: async (parentId) => {
-      await addChildNodeHandler(parentId, nodes, addNode, addLink);
-    },
-    onDeleteNode: async (nodeId) => {
-      await deleteNodeRecursive(
-        nodeId,
-        nodes,
-        links,
-        deleteNode,
-        deleteLink,
-        visualLinks,
-        removeVisualLink
-      );
-    },
-  });}, [
-    selectedNodes,
-    selectedLinks,
+      selectedNodes: selectedNodeObjects,
+      selectedLinks: selectedLinkObjects,
+      nodes,
+      links,
+      onClose: () => {
+        setSelectedNodes(new Set());
+        setSelectedLinks(new Set());
+      },
+      onCreateChildNode: async (parentId) => {
+        await addChildNodeHandler(parentId, nodes, addNode, addLink);
+      },
+      onDeleteNode: async (nodeId) => {
+        await deleteNodeRecursive(
+          nodeId,
+          nodes,
+          links,
+          deleteNode,
+          deleteLink,
+          visualLinks,
+          removeVisualLink
+        );
+      },
+    });
+  }, [
     selectedNodeObjects,
     selectedLinkObjects,
     nodes,
@@ -119,9 +103,11 @@ function MeshExplorerAppEditorTabView() {
     deleteLink,
     visualLinks,
     removeVisualLink,
-    showAuxiliaryBar
+    setSelectedNodes,
+    setSelectedLinks,
   ]);
 
+  // Resize observer
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState({ width: 0, height: 0 });
 
@@ -138,14 +124,16 @@ function MeshExplorerAppEditorTabView() {
     return () => observer.disconnect();
   }, []);
 
-
   return (
-    <div ref={containerRef} style={{
-      width: "100%",
-      height: "100%",   // ← important car la hauteur ne se propage pas naturellement
-      display: "flex",
-      flexDirection: "column",
-    }}>
+    <div
+      ref={containerRef}
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <GraphWrapper
         fgRef={fgRef}
         width={size.width}

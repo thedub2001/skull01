@@ -1,5 +1,4 @@
 // src/app/MeshExplorerAppSidebar.tsx
-
 import React, { useCallback } from "react";
 import molecule from "@dtinsight/molecule";
 import type { IActivityBarItem, IMenuBarItem, ISidebarPane } from "@dtinsight/molecule/esm/model";
@@ -34,32 +33,13 @@ const Collapse = molecule.component.Collapse;
 
 function MeshExplorerAppSidebarView() {
   const openEditorTab = useCallback(() => {
-    const state = molecule.editor.getState();
-
-
-    const exists = state.current?.tabs?.some(
-      tab => tab.id === meshExplorerAppEditorTab.id
-    );
-
-    if (!exists) {
-      molecule.editor.open(meshExplorerAppEditorTab);
-    } else {
-    const groupId = state.current?.id;
-
-    if (!groupId) {
-      console.warn("[meshExplorer] Aucun groupe actif dans l’éditeur");
-      return;
-    }
-
-      // rendre actif le tab existant
-      molecule.editor.setActive(groupId, meshExplorerAppEditorTab.id!);
-    }
+    molecule.editor.open(meshExplorerAppEditorTab);
   }, []);
 
   return (
     <div style={{ width: "100%", height: "100%" }}>
       <Header
-        title={localize("demo.dataSourceManagement", "DataSource Management")}
+        title={localize("meshExplorer.sidebar.title", "Mesh Explorer")}
         toolbar={
           <Toolbar
             data={[
