@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useMoleculeSettings } from "./useMoleculeSettings";
-import type { LinkType } from "../types/graph";
+import type { LinkType, NodeType } from "../types/graph";
 import * as localDB from "../db/localDB";
 import * as remoteDB from "../db/remoteDB";
 import { pullRemoteToLocal } from "../db/sync";
@@ -40,12 +40,13 @@ export function useLinks() {
     return [];
   }, [dbMode]);
 
-  /** Add */
-  const addLink = useCallback(
-    async (source: string, target: string, type?: string | null) => {
-      const newLink: LinkType = { id: uuidv4(), source, target, type };
-      console.log("[useLinks][addLink] mode=", dbMode, newLink);
+/** Add */
+const addLink = useCallback(
+  async (source: string, target: string, type?: string | null) : Promise<LinkType> => {
+    const newLink: LinkType = { id: uuidv4(), source, target, type };
+    console.log("[useLinks][addLink] mode=", dbMode, newLink);
 
+    try {
       if (dbMode === "local") {
         await localDB.addItem("links", newLink);
       } else if (dbMode === "remote") {
@@ -57,15 +58,20 @@ export function useLinks() {
 
       setLinks((prev) => [...prev, newLink]);
       return newLink;
-    },
-    [dbMode]
-  );
+    } catch (err) {
+      console.error("[useLinks][addLink] ERROR:", err);
+      throw err;
+    }
+  },
+  [dbMode]
+);
 
-  /** Delete */
-  const deleteLink = useCallback(
-    async (id: string) => {
-      console.log("[useLinks][deleteLink] mode=", dbMode, id);
+/** Delete */
+const deleteLink = useCallback(
+  async (id: string) : Promise<boolean> => {
+    console.log("[useLinks][deleteLink] mode=", dbMode, id);
 
+    try {
       if (dbMode === "local") {
         await localDB.deleteItem("links", id);
       } else if (dbMode === "remote") {
@@ -77,9 +83,13 @@ export function useLinks() {
 
       setLinks((prev) => prev.filter((l) => l.id !== id));
       return true;
-    },
-    [dbMode]
-  );
+    } catch (err) {
+      console.error("[useLinks][deleteLink] ERROR:", err);
+      return false;
+    }
+  },
+  [dbMode]
+);
 
   return { links, fetchLinks, addLink, deleteLink };
 }

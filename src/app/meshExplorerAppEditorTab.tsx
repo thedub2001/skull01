@@ -97,14 +97,7 @@ function MeshExplorerAppEditorTabView() {
     selectedLinkObjects,
     nodes,
     links,
-    addNode,
-    addLink,
-    deleteNode,
-    deleteLink,
     visualLinks,
-    removeVisualLink,
-    setSelectedNodes,
-    setSelectedLinks,
   ]);
 
   // Resize observer

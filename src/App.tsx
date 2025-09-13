@@ -1,4 +1,4 @@
-// App.tsx
+// App.tsx (molécule)
 import React from 'react';
 import { create, Workbench } from '@dtinsight/molecule';
 import '@dtinsight/molecule/esm/style/mo.css';

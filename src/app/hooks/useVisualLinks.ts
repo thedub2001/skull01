@@ -5,6 +5,7 @@ import { useMoleculeSettings } from "./useMoleculeSettings";
 import * as localDB from "../db/localDB";
 import * as remoteDB from "../db/remoteDB";
 import { v4 as uuidv4 } from "uuid";
+import type { LinkType } from "../types/graph";
 
 export function useVisualLinks() {
   const { dbMode } = useMoleculeSettings();
@@ -38,56 +39,70 @@ export function useVisualLinks() {
     return [];
   }, [dbMode]);
 
-  /** Add */
-  const addVisualLink = useCallback(
-    async (source: string, target: string, type: string, metadata?: Record<string, unknown>,created_at?: string) => {
-      const newVL: VisualLinkType = {
-        id: uuidv4(),
-        source,
-        target,
-        type,
-        metadata: metadata ?? {},
-        created_at:"",
-      };
-      console.log("[useVisualLinks][addVisualLink] mode=", dbMode, newVL);
+/** Add */
+const addVisualLink = useCallback(
+  async (
+    source: string,
+    target: string,
+    type: string,
+    metadata?: Record<string, unknown>,
+    created_at?: string
+  ) : Promise<VisualLinkType> => {
+    const newVL: VisualLinkType = {
+      id: uuidv4(),
+      source,
+      target,
+      type,
+      metadata: metadata ?? {},
+      created_at: created_at ?? new Date().toISOString(),
+    };
+    console.log("[useVisualLinks][addVisualLink] mode=", dbMode, newVL);
 
+    try {
       if (dbMode === "local") {
         await localDB.addItem("visual_links", newVL);
-        setVisualLinks(prev => [...prev, newVL]);
-      }
-      if (dbMode === "remote") {
+      } else if (dbMode === "remote") {
         await remoteDB.addVisualLink(newVL);
-        setVisualLinks(prev => [...prev, newVL]);
-      }
-      if (dbMode === "sync") {
+      } else if (dbMode === "sync") {
         await remoteDB.addVisualLink(newVL);
         await localDB.addItem("visual_links", newVL);
-        setVisualLinks(prev => [...prev, newVL]);
       }
 
+      setVisualLinks((prev) => [...prev, newVL]);
       return newVL;
-    },
-    [dbMode]
-  );
+    } catch (err) {
+      console.error("[useVisualLinks][addVisualLink] ERROR:", err);
+      throw err;
+    }
+  },
+  [dbMode]
+);
 
-  /** Delete */
-  const removeVisualLink = useCallback(async (id: string) => {
+/** Delete */
+const removeVisualLink = useCallback(
+  async (id: string) : Promise<boolean> => {
     console.log("[useVisualLinks][removeVisualLink] mode=", dbMode, id);
 
-    if (dbMode === "local") {
-      await localDB.deleteItem("visual_links", id);
-    }
-    if (dbMode === "remote") {
-      await remoteDB.deleteVisualLink(id);
-    }
-    if (dbMode === "sync") {
-      await remoteDB.deleteVisualLink(id);
-      await localDB.deleteItem("visual_links", id);
-    }
+    try {
+      if (dbMode === "local") {
+        await localDB.deleteItem("visual_links", id);
+      } else if (dbMode === "remote") {
+        await remoteDB.deleteVisualLink(id);
+      } else if (dbMode === "sync") {
+        await remoteDB.deleteVisualLink(id);
+        await localDB.deleteItem("visual_links", id);
+      }
 
-    setVisualLinks(prev => prev.filter(vl => vl.id !== id));
-    return true;
-  }, [dbMode]);
+      setVisualLinks((prev) => prev.filter((vl) => vl.id !== id));
+      return true;
+    } catch (err) {
+      console.error("[useVisualLinks][removeVisualLink] ERROR:", err);
+      return false;
+    }
+  },
+  [dbMode]
+);
+
 
   return { visualLinks, fetchVisualLinks, addVisualLink, removeVisualLink };
 }

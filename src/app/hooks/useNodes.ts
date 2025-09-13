@@ -40,12 +40,13 @@ export function useNodes() {
     return [];
   }, [dbMode]);
 
-  /** Add */
-  const addNode = useCallback(
-    async (label: string, type?: string | null, level?: number) => {
-      const newNode: NodeType = { id: uuidv4(), label, type, level: level ?? 0 };
-      console.log("[useNodes][addNode] mode=", dbMode, newNode);
+/** Add */
+const addNode = useCallback(
+  async (label: string, type?: string | null, level?: number): Promise<NodeType> => {
+    const newNode: NodeType = { id: uuidv4(), label, type, level: level ?? 0 };
+    console.log("[useNodes][addNode] mode=", dbMode, newNode);
 
+    try {
       if (dbMode === "local") {
         await localDB.addItem("nodes", newNode);
       } else if (dbMode === "remote") {
@@ -57,15 +58,20 @@ export function useNodes() {
 
       setNodes((prev) => [...prev, newNode]);
       return newNode;
-    },
-    [dbMode]
-  );
+    } catch (err) {
+      console.error("[useNodes][addNode] ERROR:", err);
+      throw err;
+    }
+  },
+  [dbMode]
+);
 
-  /** Delete */
-  const deleteNode = useCallback(
-    async (id: string) => {
-      console.log("[useNodes][deleteNode] mode=", dbMode, id);
+/** Delete */
+const deleteNode = useCallback(
+  async (id: string): Promise<boolean> => {
+    console.log("[useNodes][deleteNode] mode=", dbMode, id);
 
+    try {
       if (dbMode === "local") {
         await localDB.deleteItem("nodes", id);
       } else if (dbMode === "remote") {
@@ -77,9 +83,14 @@ export function useNodes() {
 
       setNodes((prev) => prev.filter((n) => n.id !== id));
       return true;
-    },
-    [dbMode]
-  );
+    } catch (err) {
+      console.error("[useNodes][deleteNode] ERROR:", err);
+      return false;
+    }
+  },
+  [dbMode]
+);
+
 
   return { nodes, fetchGraphData, addNode, deleteNode };
 }
