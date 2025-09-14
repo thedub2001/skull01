@@ -2,39 +2,60 @@
 import * as local from "./localDB";
 import * as remote from "./remoteDB";
 import type { NodeType, LinkType } from "../types/graph";
-import type { VisualLink } from "../utils/addDynamicVisualLinks";
+import type { VisualLinkType } from "../types/VisualLinkType";
+import type { DatasetRow } from "./remoteDB";
 
-type DbMode = "local" | "remote" | "sync";
+export type DbMode = "local" | "remote" | "sync";
 
 function log(method: string, mode: DbMode, extra?: unknown) {
   console.log(`[db][adapter] ${method} mode=${mode}`, extra ?? "");
 }
 
-async function ensureLocal() {
-  // initLocalDB est lazy côté local.getAll/put, donc rien ici.
-  return;
+// ---------------- Reads ----------------
+export async function fetchDatasets(mode: DbMode): Promise<DatasetRow[]> {
+  log("fetchDatasets", mode);
+  if (mode === "remote") return remote.fetchDatasets();
+  if (mode === "local") return local.getAll("datasets");
+  if (mode === "sync") {
+    const remoteDs = await remote.fetchDatasets();
+    for (const ds of remoteDs) await local.addItem("datasets", ds);
+    return local.getAll("datasets");
+  }
+  return [];
 }
 
-// ---------------- Reads ----------------
-export async function fetchGraphData(mode: DbMode): Promise<{ nodes: NodeType[]; links: LinkType[] }> {
-  log("fetchGraphData", mode);
+export async function fetchGraphData(
+  mode: DbMode,
+  datasetId: string
+): Promise<{ nodes: NodeType[]; links: LinkType[] }> {
+  log("fetchGraphData", mode, { datasetId });
   if (mode === "remote") {
-    const [nodes, links] = await Promise.all([remote.fetchNodes(), remote.fetchLinks()]);
+    const [nodes, links] = await Promise.all([
+      remote.fetchNodes(datasetId),
+      remote.fetchLinks(datasetId),
+    ]);
     return { nodes, links };
   }
-  // local ou sync => on lit local
-  const [nodes, links] = await Promise.all([local.getAll<NodeType>("nodes"), local.getAll<LinkType>("links")]);
+  const [nodes, links] = await Promise.all([
+    local.getAllByDataset("nodes", datasetId),
+    local.getAllByDataset("links", datasetId),
+  ]);
   return { nodes, links };
 }
 
-export async function fetchVisualLinks(mode: DbMode, filterType?: string): Promise<VisualLink[]> {
-  log("fetchVisualLinks", mode, { filterType });
+export async function fetchVisualLinks(
+  mode: DbMode,
+  datasetId: string,
+  filterType?: string
+): Promise<VisualLinkType[]> {
+  log("fetchVisualLinks", mode, { datasetId, filterType });
   if (mode === "remote") {
-    return remote.fetchVisualLinks(filterType);
+    return remote.fetchVisualLinks(datasetId, filterType);
   }
-  const all = await local.getAll<VisualLink>("visual_links");
+  const all = await local.getAllByDataset("visual_links", datasetId);
   return filterType ? all.filter((v) => v.type === filterType) : all;
 }
+
 
 // ---------------- Writes (Nodes) ----------------
 export async function addNode(mode: DbMode, node: NodeType) {
@@ -87,7 +108,7 @@ export async function deleteLink(mode: DbMode, id: string) {
 }
 
 // ---------------- Writes (VisualLinks) ----------------
-export async function addVisualLink(mode: DbMode, vl: VisualLink) {
+export async function addVisualLink(mode: DbMode, vl: VisualLinkType) {
   log("addVisualLink", mode, vl);
   if (mode === "local") return local.addItem("visual_links", vl);
   if (mode === "remote") return remote.addVisualLink(vl);
@@ -95,7 +116,7 @@ export async function addVisualLink(mode: DbMode, vl: VisualLink) {
   await remote.addVisualLink(vl);
 }
 
-export async function updateVisualLink(mode: DbMode, vl: VisualLink) {
+export async function updateVisualLink(mode: DbMode, vl: VisualLinkType) {
   log("updateVisualLink", mode, vl);
   if (mode === "local") return local.addItem("visual_links", vl);
   if (mode === "remote") return remote.updateVisualLink(vl);

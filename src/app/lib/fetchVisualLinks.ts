@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { VisualLink } from '@/utils/addDynamicVisualLinks';
+import type { VisualLinkType } from '../types/VisualLinkType';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
@@ -7,7 +7,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function fetchVisualLinksFromSupabase(
   filterType?: string // si tu veux récupérer uniquement un type de lien (ex: "amitié")
-): Promise<VisualLink[]> {
+): Promise<VisualLinkType[]> {
   let query = supabase.from('visual_links').select('*');
 
   if (filterType) {
@@ -29,5 +29,5 @@ export async function fetchVisualLinksFromSupabase(
     target: row.target,
     type: row.type,
     metadata: row.metadata || {},
-  })) as VisualLink[];
+  })) as VisualLinkType[];
 }

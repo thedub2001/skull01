@@ -9,7 +9,6 @@ import { GithubActivityBarExtension } from './extensions/GithubActivityBarExtens
 import { ExtendLocales } from './extensions/i18nExtension';
 import { ProblemsExtension } from './extensions/ProblemsExtension';
 import { SettingsExtension } from './extensions/SettingsExtension';
-import { DataSourceAppExtension } from './extensions/dataSourceApp/DataSourceExtension';
 import { AuxiliaryBarExtension } from './extensions/AuxiliaryBarExtension';
 import { MeshExplorerAppExtension } from './extensions/MeshExplorerAppExtension';
 
@@ -22,7 +21,6 @@ const moInstance = create({
         ExtendLocales,
         new ProblemsExtension(),
         new SettingsExtension(),
-        new DataSourceAppExtension(),
         new AuxiliaryBarExtension(),
         new MeshExplorerAppExtension(),
     ],

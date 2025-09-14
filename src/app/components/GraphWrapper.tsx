@@ -57,16 +57,16 @@ export default function GraphWrapper(
   });
 
   // --- ⚡ Reglage du zoom (moins sensible) ---
-useEffect(() => {
-  if (fgRef.current) {
-    // on caste l'objet en OrbitControls
-    const controls = fgRef.current.controls() as OrbitControls | undefined;
-    if (controls) {
-      controls.zoomSpeed = 0.5; // ← plus lent
-      console.log("[GraphWrapper] Zoom speed réglé sur", controls.zoomSpeed);
+  useEffect(() => {
+    if (fgRef.current) {
+      // on caste l'objet en OrbitControls
+      const controls = fgRef.current.controls() as OrbitControls | undefined;
+      if (controls) {
+        controls.zoomSpeed = 0.5; // ← plus lent
+        console.log("[GraphWrapper] Zoom speed réglé sur", controls.zoomSpeed);
+      }
     }
-  }
-}, [fgRef]);
+  }, [fgRef]);
 
   // --- Couleurs des nœuds ---
   const nodeColors = useMemo(() => {

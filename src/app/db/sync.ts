@@ -2,20 +2,22 @@
 import * as local from "./localDB";
 import * as remote from "./remoteDB";
 import type { NodeType, LinkType } from "../types/graph";
-import type { VisualLink } from "../utils/addDynamicVisualLinks";
+import type { VisualLinkType } from "../types/VisualLinkType";
 
 /**
- * Push complet : on supprime tout sur le remote et on envoie le local
+ * Push complet : on supprime tout sur le remote (pour un dataset) et on envoie le local
  */
-export async function pushLocalToRemote() {
-  console.log("[sync] push local → remote");
+export async function pushLocalToRemote(datasetId: string) {
+  console.log(`[sync] push local → remote (dataset=${datasetId})`);
 
-  const data = await local.exportDB();
+  const data = await local.exportDB(datasetId);
 
-  // --- Supprimer tout sur le remote ---
-  const remoteNodes = await remote.fetchNodes();
-  const remoteLinks = await remote.fetchLinks();
-  const remoteVisualLinks = await remote.fetchVisualLinks();
+  // --- Supprimer tout sur le remote pour ce dataset ---
+  const [remoteNodes, remoteLinks, remoteVisualLinks] = await Promise.all([
+    remote.fetchNodes(datasetId),
+    remote.fetchLinks(datasetId),
+    remote.fetchVisualLinks(datasetId),
+  ]);
 
   await Promise.all([
     ...remoteNodes.map((n) => remote.deleteNode(n.id)),
@@ -25,24 +27,23 @@ export async function pushLocalToRemote() {
 
   // --- Ajouter le local sur le remote ---
   await Promise.all([
-    ...data.nodes.map((n) => remote.addNode(n)),
-    ...data.links.map((l) => remote.addLink(l)),
-    ...data.visual_links.map((vl) => remote.addVisualLink(vl)),
+    ...data.nodes.map((n: NodeType) => remote.addNode({ ...n, dataset: datasetId })),
+    ...data.links.map((l: LinkType) => remote.addLink({ ...l, dataset: datasetId })),
+    ...data.visual_links.map((vl: VisualLinkType) => remote.addVisualLink({ ...vl, dataset: datasetId })),
   ]);
 
-  console.log("[sync] push terminé");
+  console.log(`[sync] push terminé (dataset=${datasetId})`);
 }
 
-/**
- * Pull complet : on supprime tout en local et on importe le remote
- */
-export async function pullRemoteToLocal() {
-  console.log("[sync] pull remote → local");
+export async function pullRemoteToLocal(datasetId: string) {
+  console.log(`[sync] pull remote → local (dataset=${datasetId})`);
 
-  // --- Supprimer tout en local ---
-  const localNodes = await local.getAll("nodes");
-  const localLinks = await local.getAll("links");
-  const localVisualLinks = await local.getAll("visual_links");
+  // --- Supprimer tout en local pour ce dataset ---
+  const [localNodes, localLinks, localVisualLinks] = await Promise.all([
+    local.getAllByDataset("nodes", datasetId),
+    local.getAllByDataset("links", datasetId),
+    local.getAllByDataset("visual_links", datasetId),
+  ]);
 
   await Promise.all([
     ...localNodes.map((n) => local.deleteItem("nodes", n.id)),
@@ -50,20 +51,34 @@ export async function pullRemoteToLocal() {
     ...localVisualLinks.map((vl) => local.deleteItem("visual_links", vl.id)),
   ]);
 
-  // --- Récupérer le remote et importer ---
-  const nodes = await remote.fetchNodes();
-  const links = await remote.fetchLinks();
-  const visual_links = await remote.fetchVisualLinks();
+  local.deleteItem("datasets", datasetId)
+  console.log("[sync] dataset local effacé avec nodes, links et visual_links");
 
-  await local.importDB({ nodes, links, visual_links });
 
-  console.log("[sync] pull terminé");
+  // --- Récupérer le remote ---
+  const [nodes, links, visual_links, dataset] = await Promise.all([
+    remote.fetchNodes(datasetId),
+    remote.fetchLinks(datasetId),
+    remote.fetchVisualLinks(datasetId),
+    remote.fetchDataset(datasetId), // <--- nouveau
+  ]);
+
+  // --- Importer le dataset en local ---
+  if (dataset) {
+    await local.addItem("datasets", dataset);
+    console.log("[sync] dataset créé en local:", dataset);
+  }
+
+  // --- Importer les contenus ---
+  await local.importDB({ nodes, links, visual_links }, datasetId);
+
+  console.log(`[sync] pull terminé (dataset=${datasetId})`);
 }
 
 /**
  * Init Realtime Sync
  */
-export function initRealtimeSync() {
-  console.log("[sync] init realtime sync");
-  // TODO : implémenter si nécessaire
+export function initRealtimeSync(datasetId: string) {
+  console.log(`[sync] init realtime sync (dataset=${datasetId})`);
+  // TODO : implémenter la souscription Supabase realtime si nécessaire
 }

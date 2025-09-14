@@ -12,6 +12,7 @@ const defaultSettings = {
   hueStep: 30,
   showLabels: true,
   linkTypeFilter: [] as string[],
+  user: "fab11111-1111-1111-1111-111111111111",
 };
 
 export class SettingsExtension implements IExtension {
@@ -23,6 +24,9 @@ export class SettingsExtension implements IExtension {
     const saved = localStorage.getItem(STORAGE_KEY);
     const parsed = saved ? JSON.parse(saved) : {};
     const initialSettings = { ...defaultSettings, ...parsed };
+    console.log("[SettingsExtension] defaultSettings : ", defaultSettings );
+    console.log("[SettingsExtension] parsed : ", parsed );
+    console.log("[SettingsExtension] initialSettings : ", initialSettings );
 
     // 2. Injecter dans Molecule
     molecule.settings.append(initialSettings);
@@ -30,6 +34,9 @@ export class SettingsExtension implements IExtension {
     // 3. Écouter changements et sauvegarder
     molecule.settings.onChangeSettings((newSettings) => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+
+      const stored = localStorage.getItem(STORAGE_KEY);
+      console.log("[SettingsExtension] Nouveaux ettings, contenu de", STORAGE_KEY, ":", stored);
     });
   }
 

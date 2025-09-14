@@ -5,6 +5,8 @@ import type { IActivityBarItem, IMenuBarItem, ISidebarPane } from "@dtinsight/mo
 import { localize } from "@dtinsight/molecule/esm/i18n/localize";
 import { Header, Content } from "@dtinsight/molecule/esm/workbench/sidebar";
 import { meshExplorerAppEditorTab } from "./meshExplorerAppEditorTab";
+import { listLocalDatasets, createLocalDataset, resetLocal, inspectIndexedDB } from "./db/localDB";
+import { listRemoteDatasets, createRemoteDataset } from "./db/remoteDB";
 
 export const MESH_EXPLORER_APP_ID = "meshExplorerPane";
 
@@ -33,43 +35,76 @@ const Collapse = molecule.component.Collapse;
 
 type DbMode = "local" | "remote" | "sync";
 
-const dbOptions: { mode: DbMode; label: string; description: string }[] = [
-  { mode: "local", label: "IndexedDB (Local)", description: "Stockage local (idb)" },
-  { mode: "remote", label: "Supabase (Remote)", description: "Connexion à Supabase" },
-  { mode: "sync", label: "Sync (Local + Remote)", description: "Mode synchronisé" },
-];
-
 function MeshExplorerAppSidebarView() {
   const openEditorTab = useCallback(() => {
     console.log("[Sidebar] openEditorTab clicked");
     molecule.editor.open(meshExplorerAppEditorTab);
   }, []);
 
-  // --- State local pour le dbMode (initialisé depuis settings) ---
-  const [activeMode, setActiveModeState] = useState<DbMode>("local");
+  // --- State pour DB Mode ---
+  const [activeMode, setActiveMode] = useState<DbMode>("local");
 
-  // --- Sync avec Molecule settings ---
-useEffect(() => {
-  const settings = molecule.settings.getSettings();
-  const initialMode = (settings as any).dbMode || "local";
-  console.log("[Sidebar] Loaded dbMode from settings:", initialMode);
-  setActiveModeState(initialMode);
+  // --- State pour datasets ---
+  const [datasets, setDatasets] = useState<{ id: string; name: string; source: DbMode }[]>([]);
+  const [activeDataset, setActiveDataset] = useState<{ id: string; source: DbMode } | null>(null);
 
-  // Listener sur changement settings
-  molecule.settings.onChangeSettings((newSettings) => {
-    console.log("[Sidebar] settings changed:", newSettings);
-    if ((newSettings as any).dbMode) {
-      setActiveModeState((newSettings as any).dbMode);
+  // --- Load settings on mount ---
+  useEffect(() => {
+    const settings = molecule.settings.getSettings();
+    setActiveMode((settings as any).dbMode || "local");
+    setActiveDataset((settings as any).dataset || null);
+
+    molecule.settings.onChangeSettings((newSettings) => {
+      if ((newSettings as any).dbMode) setActiveMode((newSettings as any).dbMode);
+      if ((newSettings as any).dataset) setActiveDataset((newSettings as any).dataset);
+    });
+  }, []);
+
+  // --- Charger les datasets (local + remote) séparément ---
+  useEffect(() => {
+    async function fetchDatasets() {
+      try {
+        const local = await listLocalDatasets();
+        const remote = await listRemoteDatasets();
+
+        const localWithSource = local.map((d) => ({ ...d, source: "local" as DbMode }));
+        const remoteWithSource = remote.map((d) => ({ ...d, source: "remote" as DbMode }));
+
+        setDatasets([...localWithSource, ...remoteWithSource]);
+      } catch (err) {
+        console.error("[Sidebar] Error fetching datasets:", err);
+      }
     }
-  });
+    fetchDatasets();
+  }, []);
 
-  // Pas de cleanup car onChangeSettings retourne void
-}, []);
-
-  const setActiveMode = (mode: DbMode) => {
-    console.log("[Sidebar] Setting dbMode to:", mode);
-    setActiveModeState(mode);
+  const handleDbModeChange = (mode: DbMode) => {
+    setActiveMode(mode);
     molecule.settings.update({ dbMode: mode });
+  };
+
+  const handleDatasetChange = (id: string, source: DbMode) => {
+    setActiveDataset({ id, source });
+    molecule.settings.update({ dataset: id });
+  };
+
+  const handleCreateDataset = async (mode: DbMode) => {
+    const name = prompt(`Nom du dataset ${mode}?`);
+    if (!name) return;
+
+    try {
+      let newDs;
+      if (mode === "local") {
+        newDs = await createLocalDataset(name, mode);
+      } else if (mode === "remote") {
+        newDs = await createRemoteDataset(name, mode);
+      }
+      if (newDs) {
+        setDatasets((prev) => [...prev, { ...newDs, source: mode }]);
+      }
+    } catch (err) {
+      console.error("[Sidebar] Failed to create dataset:", err);
+    }
   };
 
   return (
@@ -92,17 +127,17 @@ useEffect(() => {
               id: "Databases",
               name: "Bases de données",
               renderPanel: () => (
-                <div style={{ padding: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {dbOptions.map((db) => (
+                <div style={{ padding: "8px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {(["local", "remote", "sync"] as DbMode[]).map((db) => (
                     <label
-                      key={db.mode}
+                      key={db}
                       style={{
                         display: "flex",
                         flexDirection: "column",
                         padding: "6px",
                         borderRadius: "4px",
-                        background: activeMode === db.mode ? "#2563eb" : "transparent",
-                        color: activeMode === db.mode ? "#fff" : "#ccc",
+                        background: activeMode === db ? "#2563eb" : "transparent",
+                        color: activeMode === db ? "#fff" : "#ccc",
                         cursor: "pointer",
                       }}
                     >
@@ -110,21 +145,121 @@ useEffect(() => {
                         <input
                           type="radio"
                           name="dbMode"
-                          checked={activeMode === db.mode}
-                          onChange={() => setActiveMode(db.mode)}
+                          checked={activeMode === db}
+                          onChange={() => handleDbModeChange(db)}
                         />
-                        <span>{db.label}</span>
+                        <span>{db}</span>
                       </div>
-                      <span style={{ fontSize: "11px", opacity: 0.7 }}>{db.description}</span>
                     </label>
                   ))}
                 </div>
               ),
             },
             {
-              id: "Detail",
-              name: "Detail",
-              renderPanel: () => <Header title="carino" toolbar={undefined} />,
+              id: "Datasets",
+              name: "Choose Dataset",
+              renderPanel: () => (
+                <div style={{ padding: "8px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {/* Section Local Datasets */}
+                  <div>
+                    <strong>Local Datasets</strong>
+                    {datasets
+                      .filter((d) => d.source === "local")
+                      .map((ds) => {
+                        const isSelected = activeDataset?.id === ds.id && activeDataset?.source === ds.source;
+                        const isDuplicate = activeDataset?.id === ds.id && activeDataset?.source !== ds.source;
+                        return (
+                          <label
+                            key={`local-${ds.id}`}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: "6px",
+                              padding: "6px",
+                              borderRadius: "4px",
+                              background: isSelected
+                                ? "#16a34a"
+                                : isDuplicate
+                                ? "#f97316"
+                                : "transparent",
+                              color: isSelected || isDuplicate ? "#fff" : "#ccc",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <input
+                                type="radio"
+                                name="dataset-local"
+                                checked={isSelected}
+                                onChange={() => handleDatasetChange(ds.id, "local")}
+                              />
+                              <span>{ds.name}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    <button onClick={() => handleCreateDataset("local")}>+ New Local Dataset</button>
+                  </div>
+
+                  {/* Section Remote Datasets */}
+                  <div>
+                    <strong>Remote Datasets</strong>
+                    {datasets
+                      .filter((d) => d.source === "remote")
+                      .map((ds) => {
+                        const isSelected = activeDataset?.id === ds.id && activeDataset?.source === ds.source;
+                        const isDuplicate = activeDataset?.id === ds.id && activeDataset?.source !== ds.source;
+                        return (
+                          <label
+                            key={`remote-${ds.id}`}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: "6px",
+                              padding: "6px",
+                              borderRadius: "4px",
+                              background: isSelected
+                                ? "#16a34a"
+                                : isDuplicate
+                                ? "#f97316"
+                                : "transparent",
+                              color: isSelected || isDuplicate ? "#fff" : "#ccc",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <input
+                                type="radio"
+                                name="dataset-remote"
+                                checked={isSelected}
+                                onChange={() => handleDatasetChange(ds.id, "remote")}
+                              />
+                              <span>{ds.name}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    <button onClick={() => handleCreateDataset("remote")}>+ New Remote Dataset</button>
+                  </div>
+
+
+                  {/* Boutons utilitaires */}
+                  <button
+                    style={{ marginTop: "8px", background: "#dc2626", color: "white", padding: "6px", borderRadius: "4px" }}
+                    onClick={resetLocal}
+                  >
+                    🗑 Reset Local Storage
+                  </button>
+                  <button
+                    style={{ marginTop: "8px", background: "#268c26", color: "white", padding: "6px", borderRadius: "4px" }}
+                    onClick={inspectIndexedDB}
+                  >
+                    Check Local Storage
+                  </button>
+                </div>
+              ),
             },
           ]}
         />
@@ -132,3 +267,5 @@ useEffect(() => {
     </div>
   );
 }
+
+export default MeshExplorerAppSidebarView;
