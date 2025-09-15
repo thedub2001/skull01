@@ -73,6 +73,6 @@ export class AuxiliaryBarExtension implements IExtension {
         auxiliaryBarService.setState({ current: undefined });
         auxiliaryBarService.render();
 
-        console.log('[AuxiliaryBarExtension] auxiliary state after dispose', auxiliaryService.getState());
+        console.log('[AuxiliaryBarExtension] auxiliary state after dispose', auxiliaryBarService.getState());
     }
 }

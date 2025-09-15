@@ -1,12 +1,16 @@
-import "reflect-metadata";
-import React from 'react'
-import ReactDOM from 'react-dom'
+import React from "react"; // uses with react.StrictMode
+import ReactDOM from "react-dom/client";
 
-import App from './App'
+import App from "./App";
 
-ReactDOM.render(
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error("Impossible de trouver l’élément root dans index.html");
+}
+
+const root = ReactDOM.createRoot(rootElement);
+root.render(
   //<React.StrictMode>
-    <App />,
-  //</React.StrictMode>,
-  document.getElementById('root')
-)
+    <App />
+  //</React.StrictMode>
+);
