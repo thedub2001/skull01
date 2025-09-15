@@ -1,10 +1,8 @@
 // src/db/adapter.ts
 import * as local from "./localDB";
 import * as remote from "./remoteDB";
-import type { NodeType, LinkType, VisualLinkType } from "../types/types";
+import type { NodeType, LinkType, VisualLinkType, DbMode } from "../types/types";
 import type { DatasetRow } from "./remoteDB";
-
-export type DbMode = "local" | "remote" | "sync";
 
 function log(method: string, mode: DbMode, extra?: unknown) {
   console.log(`[db][adapter] ${method} mode=${mode}`, extra ?? "");
