@@ -1,8 +1,7 @@
 // db/sync.ts
 import * as local from "./localDB";
 import * as remote from "./remoteDB";
-import type { NodeType, LinkType } from "../types/graph";
-import type { VisualLinkType } from "../types/VisualLinkType";
+import type { NodeType, LinkType, VisualLinkType } from "../types/types";
 
 /**
  * Push complet : on supprime tout sur le remote (pour un dataset) et on envoie le local

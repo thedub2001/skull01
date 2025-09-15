@@ -1,6 +1,6 @@
 // comonents/InfoPanel.tsx
 import React from "react";
-import type { NodeType, LinkType } from "../types/graph";
+import type { NodeType, LinkType } from "../types/types";
 
 interface InfoPanelProps {
   selectedNodes: NodeType[];

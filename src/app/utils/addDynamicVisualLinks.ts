@@ -1,8 +1,8 @@
 // utils/addDynamicVisualLinks.ts
 
 import * as THREE from 'three';
-import type { VisualLinkType } from '../types/VisualLinkType';
-import type { NodeType } from '../types/graph';
+import type { VisualLinkType } from '../types/types';
+import type { NodeType } from '../types/types';
 
 type VisualLinkLine = {
   line: THREE.Line;

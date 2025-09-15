@@ -1,8 +1,7 @@
 // src/db/adapter.ts
 import * as local from "./localDB";
 import * as remote from "./remoteDB";
-import type { NodeType, LinkType } from "../types/graph";
-import type { VisualLinkType } from "../types/VisualLinkType";
+import type { NodeType, LinkType, VisualLinkType } from "../types/types";
 import type { DatasetRow } from "./remoteDB";
 
 export type DbMode = "local" | "remote" | "sync";

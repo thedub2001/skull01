@@ -2,8 +2,8 @@
 import { useEffect } from "react";
 import { addDynamicVisualLinks, updateVisualLinks } from "../utils/addDynamicVisualLinks";
 import type { ForceGraphMethods } from "react-force-graph-3d";
-import type { VisualLinkType } from "../types/VisualLinkType";
-import type { NodeType, LinkType } from "../types/graph";
+import type { VisualLinkType } from "../types/types";
+import type { NodeType, LinkType } from "../types/types";
 
 interface Props {
   fgRef: React.MutableRefObject<ForceGraphMethods<NodeType, LinkType> | null>;

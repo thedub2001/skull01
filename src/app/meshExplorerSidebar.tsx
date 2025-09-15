@@ -1,22 +1,22 @@
-// src/app/MeshExplorerAppSidebar.tsx
-import React, { useCallback, useState, useEffect } from "react";
+// src/app/MeshExplorerSidebar.tsx
+import { useCallback, useState, useEffect } from "react";
 import molecule from "@dtinsight/molecule";
 import type { IActivityBarItem, IMenuBarItem, ISidebarPane } from "@dtinsight/molecule/esm/model";
 import { localize } from "@dtinsight/molecule/esm/i18n/localize";
 import { Header, Content } from "@dtinsight/molecule/esm/workbench/sidebar";
-import { meshExplorerAppEditorTab } from "./meshExplorerAppEditorTab";
+import { meshExplorerEditorTab } from "./meshExplorerEditorTab";
 import { listLocalDatasets, createLocalDataset, resetLocal, inspectIndexedDB } from "./db/localDB";
 import { listRemoteDatasets, createRemoteDataset } from "./db/remoteDB";
 
 export const MESH_EXPLORER_APP_ID = "meshExplorerPane";
 
-export const meshExplorerAppSidebar: ISidebarPane = {
+export const meshExplorerSidebar: ISidebarPane = {
   id: MESH_EXPLORER_APP_ID,
   title: "Mesh Explorer",
-  render: () => <MeshExplorerAppSidebarView />,
+  render: () => <MeshExplorerSidebarView />,
 };
 
-export const meshExplorerAppActivityBar: IActivityBarItem = {
+export const meshExplorerActivityBar: IActivityBarItem = {
   id: MESH_EXPLORER_APP_ID,
   sortIndex: -1,
   name: "Mesh Explorer",
@@ -24,9 +24,9 @@ export const meshExplorerAppActivityBar: IActivityBarItem = {
   icon: "type-hierarchy",
 };
 
-export const meshExplorerAppMenuItem: IMenuBarItem = {
-  id: "menu.meshExplorerApp",
-  name: localize("menu.meshExplorerApp", "Mesh Explorer Menu"),
+export const meshExplorerMenuItem: IMenuBarItem = {
+  id: "menu.meshExplorer",
+  name: localize("menu.meshExplorer", "Mesh Explorer Menu"),
   icon: "type-hierarchy",
 };
 
@@ -35,10 +35,10 @@ const Collapse = molecule.component.Collapse;
 
 type DbMode = "local" | "remote" | "sync";
 
-function MeshExplorerAppSidebarView() {
+function MeshExplorerSidebarView() {
   const openEditorTab = useCallback(() => {
     console.log("[Sidebar] openEditorTab clicked");
-    molecule.editor.open(meshExplorerAppEditorTab);
+    molecule.editor.open(meshExplorerEditorTab);
   }, []);
 
   // --- State pour DB Mode ---
@@ -268,4 +268,4 @@ function MeshExplorerAppSidebarView() {
   );
 }
 
-export default MeshExplorerAppSidebarView;
+export default MeshExplorerSidebarView;

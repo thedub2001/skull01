@@ -1,7 +1,6 @@
 // utils/nodeHandlers.ts
 import { NotEqualStencilFunc } from "three";
-import type { NodeType, LinkType } from "../types/graph";
-import type { VisualLinkType } from "../types/VisualLinkType";
+import type { NodeType, LinkType, VisualLinkType } from "../types/types";
 
 /**
  * Supprime un nœud et ses liens associés (classiques + visualLinks)

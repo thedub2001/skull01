@@ -1,7 +1,6 @@
 // app/db/localDB.ts
 import { openDB, type IDBPDatabase } from "idb";
-import type { NodeType, LinkType } from "../types/graph";
-import type { VisualLinkType } from "../types/VisualLinkType";
+import type { NodeType, LinkType, VisualLinkType } from "../types/types";
 import type { DatasetRow } from "./remoteDB";
 import { v4 as uuidv4 } from "uuid";
 import molecule from "@dtinsight/molecule";

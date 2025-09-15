@@ -1,11 +1,11 @@
-// src/app/MeshExplorerAppAuxiliaryBar.tsx
-import React from "react";
+// src/app/MeshExplorerAuxiliaryBar.tsx
+
 import molecule from "@dtinsight/molecule";
 import type { IAuxiliaryData } from "@dtinsight/molecule/esm/model";
 import { AuxiliaryBarService } from "@dtinsight/molecule/esm/services";
 
 import InfoPanel from "./components/InfoPanel";
-import type { NodeType, LinkType } from "./types/graph";
+import type { NodeType, LinkType } from "./types/types";
 
 const auxiliaryBarService = molecule.auxiliaryBar as AuxiliaryBarService;
 

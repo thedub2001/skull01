@@ -1,9 +1,8 @@
-// src/app/MeshExplorerAppEditorTab.tsx
+// src/app/MeshExplorerEditorTab.tsx
 import React from "react";
 import molecule from "@dtinsight/molecule";
 import type { IEditorTab } from "@dtinsight/molecule/esm/model";
-import { closeMeshExplorerAuxiliaryBar, meshExplorerAuxiliaryBar } from "./meshExplorerAppAuxiliaryBar";
-import styled from "styled-components";
+import { closeMeshExplorerAuxiliaryBar, meshExplorerAuxiliaryBar } from "./meshExplorerAuxiliaryBar";
 import GraphWrapper from "./components/GraphWrapper";
 
 import { useNodes } from "./hooks/useNodes";
@@ -18,24 +17,24 @@ import { addChildNodeHandler, deleteNodeRecursive } from "./utils/nodeHandlers";
 import useLabelSprite from "./components/LabelSprite";
 
 import type { ForceGraphMethods } from "react-force-graph-3d";
-import type { NodeType, LinkType } from "./types/graph";
+import type { NodeType, LinkType } from "./types/types";
 
 export const MESH_EXPLORER_APP_ID = "meshExplorerPane";
 
-export const meshExplorerAppEditorTab: IEditorTab = {
+export const meshExplorerEditorTab: IEditorTab = {
   id: MESH_EXPLORER_APP_ID,
   name: "Mesh Explorer",
-  renderPane: () => <MeshExplorerAppEditorTabView />,
+  renderPane: () => <MeshExplorerEditorTabView />,
 };
 
-export function exitMeshExplorerAppEditorTabView() {
+export function exitMeshExplorerEditorTabView() {
   const group = molecule.editor.getState().current;
   if (group) {
-    molecule.editor.closeTab(meshExplorerAppEditorTab.id!, group.id!);
+    molecule.editor.closeTab(meshExplorerEditorTab.id!, group.id!);
   }
 }
 
-function MeshExplorerAppEditorTabView() {
+function MeshExplorerEditorTabView() {
   const { nodes, fetchGraphData, addNode, deleteNode } = useNodes();
   const { links, fetchLinks, addLink, deleteLink } = useLinks();
   const { visualLinks, fetchVisualLinks, addVisualLink, removeVisualLink } = useVisualLinks();

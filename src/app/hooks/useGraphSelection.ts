@@ -1,6 +1,6 @@
 // hooks/useGraphSelection
 import { useState, useMemo } from "react";
-import type { NodeType, LinkType } from "../types/graph";
+import type { NodeType, LinkType } from "../types/types";
 
 export function useGraphSelection(nodes: NodeType[], links: LinkType[]) {
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());

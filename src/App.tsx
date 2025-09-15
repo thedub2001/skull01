@@ -10,7 +10,7 @@ import { ExtendLocales } from './extensions/i18nExtension';
 import { ProblemsExtension } from './extensions/ProblemsExtension';
 import { SettingsExtension } from './extensions/SettingsExtension';
 import { AuxiliaryBarExtension } from './extensions/AuxiliaryBarExtension';
-import { MeshExplorerAppExtension } from './extensions/MeshExplorerAppExtension';
+import { MeshExplorerExtension } from './extensions/MeshExplorerExtension';
 
 const moInstance = create({
     extensions: [
@@ -22,7 +22,7 @@ const moInstance = create({
         new ProblemsExtension(),
         new SettingsExtension(),
         new AuxiliaryBarExtension(),
-        new MeshExplorerAppExtension(),
+        new MeshExplorerExtension(),
     ],
 });
 

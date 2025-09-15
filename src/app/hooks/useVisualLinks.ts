@@ -1,7 +1,7 @@
 // hooks/useVisualLinks.ts
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import type { VisualLinkType } from "../types/VisualLinkType";
+import type { VisualLinkType } from "../types/types";
 import { useMoleculeSettings } from "./useMoleculeSettings";
 import * as localDB from "../db/localDB";
 import * as remoteDB from "../db/remoteDB";

@@ -1,6 +1,6 @@
 // hooks/useGraphDataSync.ts
 import { useMemo } from "react";
-import type { NodeType, LinkType } from "../types/graph";
+import type { NodeType, LinkType } from "../types/types";
 
 /**
  * Retourne un objet stable { nodes, links } pour ForceGraph3D.
