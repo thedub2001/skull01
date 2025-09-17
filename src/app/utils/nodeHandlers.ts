@@ -88,7 +88,9 @@ export async function addChildNodeHandler(
 
   const childLevel = (parentNode.level ?? 0) + 1;
 
-  const newNode = await addNode(`Enfant de ${parentNode.label}`,null ,childLevel);
+
+  const newNode = await addNode(`Enfant de ${parentNode.label}`,null ,childLevel); //<-- glitch graphique si les labels portet le même nom
+  //const newNode = await addNode(Math.random().toString(36).slice(2,7),null ,childLevel);
   if (!newNode) return;
 
   await addLink(parentId, newNode.id, "parent-child");

@@ -1,4 +1,4 @@
-// comonents/InfoPanel.tsx
+// app/components/auxiliaryBar/InfoPanel.tsx
 import React from "react";
 import type { NodeType, LinkType } from "../../types/types";
 

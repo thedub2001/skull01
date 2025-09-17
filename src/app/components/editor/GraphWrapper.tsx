@@ -1,4 +1,4 @@
-// components/GraphWrapper.tsx
+// app/components/auxiliarybar/GraphWrapper.tsx
 import React, { useEffect, useMemo } from "react";
 import ForceGraph3D from "react-force-graph-3d";
 import { useVisualLinksRenderer } from "../../hooks/useVisualLinksRenderer";
@@ -85,8 +85,21 @@ export default function GraphWrapper(
   };
 
   // --- Choix d'affichage des labels ---
-  const nodeThreeObjectWithLabel = (node: NodeType) =>
-    showLabels ? nodeThreeObject(node) : null;
+  const nodeThreeObjectWithLabel = (node: NodeType) => {
+    if (!showLabels) return null;
+
+    // Récupération du ThreeObject fourni
+    const obj = nodeThreeObject(node);
+    if (!obj) return null;
+
+    // 🔹 Clonage du matériau pour éviter le glitch sur labels identiques
+    if ("material" in obj) {
+      // Si c'est un SpriteText ou un Mesh, clone le material
+      obj.material = obj.material.clone();
+    }
+
+    return obj;
+  };
 
   console.log("[GraphWrapper] width", width);
   console.log("[GraphWrapper] height", height);
