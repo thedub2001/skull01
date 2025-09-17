@@ -61,44 +61,6 @@ export async function fetchVisualLinks(
   return [];
 }
 
-export async function fetchNodes(
-  mode: DbMode,
-  datasetId: string
-): Promise<NodeType[]> {
-  log("fetchNodes", mode, { datasetId });
-  if (mode === "remote") {
-    return remote.fetchNodes(datasetId);
-  }
-  if (mode === "local") {
-    return local.getAllByDataset("nodes", datasetId);
-  }
-  if (mode === "sync") {
-    // Pull remote -> local (overwrite local for this dataset)
-    await pullRemoteToLocal(datasetId);
-    return local.getAllByDataset("nodes", datasetId);
-  }
-  return [];
-}
-
-export async function fetchLinks(
-  mode: DbMode,
-  datasetId: string
-): Promise<LinkType[]> {
-  log("fetchLinks", mode, { datasetId });
-  if (mode === "remote") {
-    return remote.fetchLinks(datasetId);
-  }
-  if (mode === "local") {
-    return local.getAllByDataset("links", datasetId);
-  }
-  if (mode === "sync") {
-    // Pull remote -> local (overwrite local for this dataset)
-    await pullRemoteToLocal(datasetId);
-    return local.getAllByDataset("links", datasetId);
-  }
-  return [];
-}
-
 // ---------------- Writes (Nodes) ----------------
 export async function addNode(mode: DbMode, node: NodeType) {
   log("addNode", mode, node);
