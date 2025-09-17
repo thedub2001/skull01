@@ -1,23 +1,14 @@
 // app/db/remoteDB.ts
 import { supabase } from "../lib/supabase";
-import type { NodeType, LinkType, VisualLinkType } from "../types/types";
+import type { NodeType, LinkType, VisualLinkType, DatasetType } from "../types/types";
 import { v4 as uuidv4 } from "uuid";
 import molecule from '@dtinsight/molecule';
 
 
-
-export type DatasetRow = {
-  id: string;
-  name: string;
-  created_at: string;
-  user: string;
-  metadata: Record<string, unknown>;
-};
-
 /**
  * Récupère un dataset unique depuis Supabase
  */
-export async function fetchDataset(datasetId: string): Promise<DatasetRow | null> {
+export async function fetchDataset(datasetId: string): Promise<DatasetType | null> {
   const { data, error } = await supabase
     .from("datasets")
     .select("*")
@@ -30,32 +21,32 @@ export async function fetchDataset(datasetId: string): Promise<DatasetRow | null
   }
 
   console.log("[datasetUtils] fetchDataset:", data);
-  return data as DatasetRow;
+  return data as DatasetType;
 }
 
 /**
  * Liste tous les datasets stockés à distance sur Supabase
  */
-export async function listRemoteDatasets(): Promise<DatasetRow[]> {
+export async function listRemoteDatasets(): Promise<DatasetType[]> {
   const { data, error } = await supabase.from("datasets").select("*");
   if (error) {
     console.error("[datasetUtils] listRemoteDatasets error:", error);
     return [];
   }
   console.log("[datasetUtils] listRemoteDatasets:", data);
-  return (data ?? []) as DatasetRow[];
+  return (data ?? []) as DatasetType[];
 }
 
 /**
  * Crée un nouveau dataset distant sur Supabase
  * et y ajoute automatiquement un nœud initial
  */
-export async function createRemoteDataset(name: string, user: string): Promise<DatasetRow | null> {
+export async function createRemoteDataset(name: string, user: string): Promise<DatasetType | null> {
 
     const settings = molecule.settings.getSettings(); // todo : gérer correctement le paramètre "propriétaire"
     console.log("[datasetUtils] user id setting:", (settings as any).user); // idem
 
-  const newDataset: Omit<DatasetRow, "created_at"> = {
+  const newDataset: Omit<DatasetType, "created_at"> = {
     id: uuidv4(),
     name,
     user : (settings as any).user,
@@ -68,7 +59,7 @@ export async function createRemoteDataset(name: string, user: string): Promise<D
     console.error("[datasetUtils] createRemoteDataset error:", error);
     return null;
   }
-  const createdDataset = data as DatasetRow;
+  const createdDataset = data as DatasetType;
   console.log("[datasetUtils] createRemoteDataset:", createdDataset);
 
   // --- Créer un nœud initial pour ce dataset ---
@@ -90,14 +81,14 @@ export async function createRemoteDataset(name: string, user: string): Promise<D
 }
 
 // ---------- Fetch Datasets ----------
-export async function fetchDatasets(): Promise<DatasetRow[]> {
+export async function fetchDatasets(): Promise<DatasetType[]> {
   const { data, error } = await supabase.from("datasets").select("*");
   if (error) {
     console.error("[remoteDB] fetchDatasets error:", error);
     return [];
   }
   console.log("[remoteDB] fetchDatasets:", data);
-  return (data ?? []) as DatasetRow[];
+  return (data ?? []) as DatasetType[];
 }
 
 // ---------- Fetch ----------

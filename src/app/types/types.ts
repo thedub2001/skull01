@@ -41,8 +41,11 @@ export type VisualLinkType = {
   created_at: string;
 };export type DbMode = "local" | "remote" | "sync";
 
-export type Dataset = {
+
+export type DatasetType = {
   id: string;
   name: string;
-  source: DbMode;
+  created_at: string;
+  user: string;
+  metadata: Record<string, unknown>;
 };

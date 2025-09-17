@@ -3,9 +3,7 @@ import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { VisualLinkType } from "../types/types";
 import { useMoleculeSettings } from "./useMoleculeSettings";
-import * as localDB from "../db/localDB";
-import * as remoteDB from "../db/remoteDB";
-import { pullRemoteToLocal } from "../db/sync";
+import { fetchVisualLinks as adapterfetchVisualLinks, addVisualLink as adapterAddVisualLink, deleteVisualLink as adapterDeleteVisualLink } from "../db/adapter";
 
 const DEBUG_MODE = true;
 const PREFIX = "[useVisualLinks]";
@@ -35,31 +33,10 @@ export function useVisualLinks() {
       }
 
       try {
-        if (dbMode === "local") {
-          const local = await localDB.getAllByDataset("visual_links", dataset);
-          const filtered = filterType ? (local as VisualLinkType[]).filter((v) => v.type === filterType) : (local as VisualLinkType[]);
-          setVisualLinks(filtered);
-          dbg("loaded local visualLinks count=", filtered.length);
-          return filtered;
-        }
-
-        if (dbMode === "remote") {
-          const remote = await remoteDB.fetchVisualLinks(dataset, filterType);
-          setVisualLinks(remote);
-          dbg("loaded remote visualLinks count=", remote.length);
-          return remote;
-        }
-
-        if (dbMode === "sync") {
-          await pullRemoteToLocal(dataset);
-          const localAfter = await localDB.getAllByDataset("visual_links", dataset);
-          const filtered = filterType ? (localAfter as VisualLinkType[]).filter((v) => v.type === filterType) : (localAfter as VisualLinkType[]);
-          setVisualLinks(filtered);
-          dbg("sync: loaded visualLinks count=", filtered.length);
-          return filtered;
-        }
-
-        return [] as VisualLinkType[];
+        const fetchedVisualLinks = await adapterfetchVisualLinks(dbMode, dataset, filterType);
+        setVisualLinks(fetchedVisualLinks);
+        dbg("loaded visualLinks count=", fetchedVisualLinks.length);
+        return fetchedVisualLinks;
       } catch (err) {
         console.error(PREFIX, "fetchVisualLinks ERROR:", err);
         setVisualLinks([]);
@@ -70,7 +47,7 @@ export function useVisualLinks() {
   );
 
   /**
-   * Add visual link (attach dataset)
+   * Ajoute un visual link attaché au dataset courant.
    */
   const addVisualLink = useCallback(
     async (
@@ -95,15 +72,7 @@ export function useVisualLinks() {
       dbg("addVisualLink", { dbMode, newVL });
 
       try {
-        if (dbMode === "local") {
-          await localDB.addItem("visual_links", newVL);
-        } else if (dbMode === "remote") {
-          await remoteDB.addVisualLink(newVL);
-        } else {
-          await remoteDB.addVisualLink(newVL);
-          await localDB.addItem("visual_links", newVL);
-        }
-
+        await adapterAddVisualLink(dbMode, newVL);
         setVisualLinks((prev) => [...prev, newVL]);
         return newVL;
       } catch (err) {
@@ -115,31 +84,23 @@ export function useVisualLinks() {
   );
 
   /**
-   * Delete visual link
+   * Supprime un visual link.
    */
-  const removeVisualLink = useCallback(
+  const deleteVisualLink = useCallback(
     async (id: string): Promise<boolean> => {
-      dbg("removeVisualLink", { dbMode, id });
+      dbg("deleteVisualLink", { dbMode, id });
 
       try {
-        if (dbMode === "local") {
-          await localDB.deleteItem("visual_links", id);
-        } else if (dbMode === "remote") {
-          await remoteDB.deleteVisualLink(id);
-        } else {
-          await remoteDB.deleteVisualLink(id);
-          await localDB.deleteItem("visual_links", id);
-        }
-
+        await adapterDeleteVisualLink(dbMode, id);
         setVisualLinks((prev) => prev.filter((vl) => vl.id !== id));
         return true;
       } catch (err) {
-        console.error(PREFIX, "removeVisualLink ERROR:", err);
+        console.error(PREFIX, "deleteVisualLink ERROR:", err);
         return false;
       }
     },
     [dbMode]
   );
 
-  return { visualLinks, fetchVisualLinks, addVisualLink, removeVisualLink };
+  return { visualLinks, fetchVisualLinks, addVisualLink, removeVisualLink: deleteVisualLink };
 }

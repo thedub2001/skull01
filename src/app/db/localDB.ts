@@ -1,7 +1,6 @@
 // app/db/localDB.ts
 import { openDB, type IDBPDatabase } from "idb";
-import type { NodeType, LinkType, VisualLinkType } from "../types/types";
-import type { DatasetRow } from "./remoteDB";
+import type { NodeType, LinkType, VisualLinkType, DatasetType } from "../types/types";
 import { v4 as uuidv4 } from "uuid";
 import molecule from "@dtinsight/molecule";
 
@@ -10,7 +9,7 @@ type DBSchema = {
   nodes: NodeType;
   links: LinkType;
   visual_links: VisualLinkType;
-  datasets: DatasetRow;
+  datasets: DatasetType;
 };
 
 let db: IDBPDatabase<DBSchema> | null = null;
@@ -69,7 +68,7 @@ export async function inspectIndexedDB() {
 /**
  * Liste tous les datasets stockés localement dans IndexedDB
  */
-export async function listLocalDatasets(): Promise<DatasetRow[]> {
+export async function listLocalDatasets(): Promise<DatasetType[]> {
   await initLocalDB();
   const datasets = await getAll("datasets");
   console.log("[datasetUtils] listLocalDatasets:", datasets);
@@ -99,11 +98,11 @@ export async function resetLocal() {
 /**
  * Crée un nouveau dataset local dans IndexedDB
  */
-export async function createLocalDataset(name: string, user = "rien"): Promise<DatasetRow> {
+export async function createLocalDataset(name: string, user = "rien"): Promise<DatasetType> {
   await initLocalDB();
 
   // --- Créer le dataset ---
-  const newDataset: DatasetRow = {
+  const newDataset: DatasetType = {
     id: uuidv4(),
     name,
     created_at: new Date().toISOString(),
@@ -227,7 +226,7 @@ export async function importDB(
     nodes: NodeType[];
     links: LinkType[];
     visual_links: VisualLinkType[];
-    datasets?: DatasetRow[];
+    datasets?: DatasetType[];
   },
   datasetId: string
 ) {

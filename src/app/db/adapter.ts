@@ -1,15 +1,14 @@
-// src/db/adapter.ts
 import * as local from "./localDB";
 import * as remote from "./remoteDB";
-import type { NodeType, LinkType, VisualLinkType, DbMode } from "../types/types";
-import type { DatasetRow } from "./remoteDB";
+import type { NodeType, LinkType, VisualLinkType, DbMode, DatasetType } from "../types/types";
+import { pullRemoteToLocal } from "./sync";
 
 function log(method: string, mode: DbMode, extra?: unknown) {
   console.log(`[db][adapter] ${method} mode=${mode}`, extra ?? "");
 }
 
 // ---------------- Reads ----------------
-export async function fetchDatasets(mode: DbMode): Promise<DatasetRow[]> {
+export async function fetchDatasets(mode: DbMode): Promise<DatasetType[]> {
   log("fetchDatasets", mode);
   if (mode === "remote") return remote.fetchDatasets();
   if (mode === "local") return local.getAll("datasets");
@@ -49,10 +48,56 @@ export async function fetchVisualLinks(
   if (mode === "remote") {
     return remote.fetchVisualLinks(datasetId, filterType);
   }
-  const all = await local.getAllByDataset("visual_links", datasetId);
-  return filterType ? all.filter((v) => v.type === filterType) : all;
+  if (mode === "local") {
+    const all = await local.getAllByDataset("visual_links", datasetId);
+    return filterType ? all.filter((v) => v.type === filterType) : all;
+  }
+  if (mode === "sync") {
+    // Pull remote -> local (overwrite local for this dataset)
+    await pullRemoteToLocal(datasetId);
+    const all = await local.getAllByDataset("visual_links", datasetId);
+    return filterType ? all.filter((v) => v.type === filterType) : all;
+  }
+  return [];
 }
 
+export async function fetchNodes(
+  mode: DbMode,
+  datasetId: string
+): Promise<NodeType[]> {
+  log("fetchNodes", mode, { datasetId });
+  if (mode === "remote") {
+    return remote.fetchNodes(datasetId);
+  }
+  if (mode === "local") {
+    return local.getAllByDataset("nodes", datasetId);
+  }
+  if (mode === "sync") {
+    // Pull remote -> local (overwrite local for this dataset)
+    await pullRemoteToLocal(datasetId);
+    return local.getAllByDataset("nodes", datasetId);
+  }
+  return [];
+}
+
+export async function fetchLinks(
+  mode: DbMode,
+  datasetId: string
+): Promise<LinkType[]> {
+  log("fetchLinks", mode, { datasetId });
+  if (mode === "remote") {
+    return remote.fetchLinks(datasetId);
+  }
+  if (mode === "local") {
+    return local.getAllByDataset("links", datasetId);
+  }
+  if (mode === "sync") {
+    // Pull remote -> local (overwrite local for this dataset)
+    await pullRemoteToLocal(datasetId);
+    return local.getAllByDataset("links", datasetId);
+  }
+  return [];
+}
 
 // ---------------- Writes (Nodes) ----------------
 export async function addNode(mode: DbMode, node: NodeType) {

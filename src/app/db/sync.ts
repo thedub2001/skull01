@@ -1,7 +1,7 @@
 // db/sync.ts
 import * as local from "./localDB";
 import * as remote from "./remoteDB";
-import type { NodeType, LinkType, VisualLinkType } from "../types/types";
+import type { NodeType, LinkType, VisualLinkType, DatasetType } from "../types/types";
 
 /**
  * Push complet : on supprime tout sur le remote (pour un dataset) et on envoie le local
@@ -50,22 +50,27 @@ export async function pullRemoteToLocal(datasetId: string) {
     ...localVisualLinks.map((vl) => local.deleteItem("visual_links", vl.id)),
   ]);
 
-  local.deleteItem("datasets", datasetId)
+  await local.deleteItem("datasets", datasetId);
   console.log("[sync] dataset local effacé avec nodes, links et visual_links");
-
 
   // --- Récupérer le remote ---
   const [nodes, links, visual_links, dataset] = await Promise.all([
     remote.fetchNodes(datasetId),
     remote.fetchLinks(datasetId),
     remote.fetchVisualLinks(datasetId),
-    remote.fetchDataset(datasetId), // <--- nouveau
+    remote.fetchDataset(datasetId),
   ]);
 
-  // --- Importer le dataset en local ---
+  // --- Importer ou créer le dataset en local ---
+  let localDataset: DatasetType;
   if (dataset) {
     await local.addItem("datasets", dataset);
-    console.log("[sync] dataset créé en local:", dataset);
+    console.log("[sync] dataset importé en local:", dataset);
+    localDataset = dataset;
+  } else {
+    // Dataset n'existe pas côté remote, on le crée en local
+    localDataset = await local.createLocalDataset(`Remote Dataset ${datasetId}`, "sync_user");
+    console.log("[sync] dataset créé en local (car absent en remote):", localDataset);
   }
 
   // --- Importer les contenus ---
