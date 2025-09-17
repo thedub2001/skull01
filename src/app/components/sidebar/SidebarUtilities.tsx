@@ -1,5 +1,5 @@
 // SidebarUtilities.tsx
-import { resetLocal, inspectIndexedDB } from "./db/localDB";
+import { resetLocal, inspectIndexedDB } from "../../db/localDB";
 
 export function SidebarUtilities() {
   return (

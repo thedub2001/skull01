@@ -1,6 +1,6 @@
 // src/app/DatasetList.tsx
 import { useCallback } from "react";
-import type { DbMode } from "./types/types";
+import type { DbMode } from "../../types/types";
 
 const DEBUG_MODE = true;
 

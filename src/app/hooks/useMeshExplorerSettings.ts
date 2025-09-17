@@ -1,7 +1,7 @@
 // src/app/hooks/useMeshExplorerSettings.ts
 import { useState, useEffect, useCallback } from "react";
 import molecule from "@dtinsight/molecule";
-import type { DbMode } from "./types/types";
+import type { DbMode } from "../types/types";
 
 const DEBUG_MODE = true;
 function log(...args: any[]) {

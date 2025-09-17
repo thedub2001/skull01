@@ -1,6 +1,6 @@
 // src/app/MeshExplorerPanels.tsx
 import molecule from "@dtinsight/molecule";
-import type { DbMode } from "./types/types";
+import type { DbMode } from "../../types/types";
 import DbModeSelector from "./DbModeSelector";
 import DatasetList, { type DatasetItem } from "./DatasetList";
 

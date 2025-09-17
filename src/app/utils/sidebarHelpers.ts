@@ -1,7 +1,7 @@
 //sidebarHelpers.ts
-import type { DbMode } from "./types/types";
-import { listLocalDatasets, createLocalDataset } from "./db/localDB";
-import { listRemoteDatasets, createRemoteDataset } from "./db/remoteDB";
+import type { DbMode } from "../types/types";
+import { listLocalDatasets, createLocalDataset } from "../db/localDB";
+import { listRemoteDatasets, createRemoteDataset } from "../db/remoteDB";
 
 /** Charge tous les datasets locaux + remote */
 export async function fetchAllDatasets(): Promise<{ id: string; name: string; source: DbMode }[]> {

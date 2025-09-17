@@ -1,56 +1,15 @@
-// src/app/MeshExplorerAuxiliaryBar.tsx
-
 import molecule from "@dtinsight/molecule";
 import type { IAuxiliaryData } from "@dtinsight/molecule/esm/model";
 import { AuxiliaryBarService } from "@dtinsight/molecule/esm/services";
 
-import InfoPanel from "./components/InfoPanel";
-import type { NodeType, LinkType } from "./types/types";
+import type { MeshExplorerAuxProps } from "./components/auxiliarybar/MeshExplorerAuxiliaryBarView";
+import MeshExplorerAuxiliaryBarView from "./components/auxiliarybar/MeshExplorerAuxiliaryBarView";
 
 const auxiliaryBarService = molecule.auxiliaryBar as AuxiliaryBarService;
 
-export interface MeshExplorerAuxProps {
-  selectedNodes?: NodeType[];
-  selectedLinks?: LinkType[];
-  nodes?: NodeType[];
-  links?: LinkType[];
-  onClose?: () => void;
-  onCreateChildNode?: (parentId: string) => Promise<void>;
-  onDeleteNode?: (nodeId: string) => Promise<void>;
-}
-
-function MeshExplorerAuxiliaryBarView({
-  selectedNodes = [],
-  selectedLinks = [],
-  nodes = [],
-  links = [],
-  onClose = () => {},
-  onCreateChildNode = async () => {},
-  onDeleteNode = async () => {},
-}: MeshExplorerAuxProps) {
-  return (
-    <div style={{ width: "100%", height: "100%" }}>
-      <header className="mo-sidebar__header">
-        <div className="mo-sidebar__title">
-          <h2>Mesh Explorer Tools</h2>
-        </div>
-      </header>
-
-      <div className="mo-sidebar__content">
-        <InfoPanel
-          selectedNodes={selectedNodes}
-          selectedLinks={selectedLinks}
-          nodes={nodes}
-          links={links}
-          onClose={onClose}
-          onCreateChildNode={onCreateChildNode}
-          onDeleteNode={onDeleteNode}
-        />
-      </div>
-    </div>
-  );
-}
-
+/**
+ * Crée et affiche la Molecule Auxiliary Bar pour Mesh Explorer.
+ */
 export function meshExplorerAuxiliaryBar(props?: MeshExplorerAuxProps) {
   const key = "MeshExplorerAuxiliaryBar";
   const tabData: IAuxiliaryData = { key, title: "Mesh Explorer Tools" };
@@ -58,7 +17,10 @@ export function meshExplorerAuxiliaryBar(props?: MeshExplorerAuxProps) {
   const state = auxiliaryBarService.getState?.();
   const exists = !!state?.data?.some((d: any) => d.key === key);
 
+  console.debug("[auxbar] open requested", { exists, props });
+
   if (!exists) {
+    console.debug("[auxbar] adding new tab", tabData);
     auxiliaryBarService.addAuxiliaryBar(tabData);
   }
 
@@ -66,11 +28,18 @@ export function meshExplorerAuxiliaryBar(props?: MeshExplorerAuxProps) {
   auxiliaryBarService.setActive(key);
   molecule.layout.setAuxiliaryBar(false);
   auxiliaryBarService.render();
+
+  console.debug("[auxbar] active tab set", { key });
 }
 
+/**
+ * Ferme la Molecule Auxiliary Bar de Mesh Explorer.
+ */
 export function closeMeshExplorerAuxiliaryBar() {
   const key = "MeshExplorerAuxiliaryBar";
   const state = auxiliaryBarService.getState();
+
+  console.debug("[auxbar] close requested", { current: state.current });
 
   const newData = state.data?.filter((d: any) => d.key !== key) ?? [];
 
@@ -81,4 +50,6 @@ export function closeMeshExplorerAuxiliaryBar() {
   });
 
   molecule.layout.setAuxiliaryBar(true);
+
+  console.debug("[auxbar] closed", { remaining: newData.map((d: any) => d.key) });
 }

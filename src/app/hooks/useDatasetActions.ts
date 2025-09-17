@@ -1,9 +1,9 @@
 // src/app/hooks/useDatasetActions.ts
 import { useCallback } from "react";
-import type { DbMode } from "./types/types";
-import type { DatasetItem } from "./DatasetList";
-import { createLocalDataset } from "./db/localDB";
-import { createRemoteDataset } from "./db/remoteDB";
+import type { DbMode } from "../types/types";
+import type { DatasetItem } from "../components/sidebar/DatasetList";
+import { createLocalDataset } from "../db/localDB";
+import { createRemoteDataset } from "../db/remoteDB";
 
 const DEBUG_MODE = true;
 function log(...args: any[]) {

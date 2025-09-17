@@ -2,7 +2,7 @@
 
 import * as THREE from 'three'
 import React from 'react'
-import type { NodeType } from '../types/types'
+import type { NodeType } from '../../types/types'
 
 type Props = {
   cameraPos: { x: number; y: number; z: number };

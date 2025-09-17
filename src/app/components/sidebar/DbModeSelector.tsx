@@ -1,5 +1,5 @@
 // src/app/DbModeSelector.tsx
-import type { DbMode } from "./types/types";
+import type { DbMode } from "../../types/types";
 
 const DEBUG_MODE = true;
 function log(...args: any[]) {

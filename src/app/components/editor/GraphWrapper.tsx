@@ -1,11 +1,11 @@
 // components/GraphWrapper.tsx
 import React, { useEffect, useMemo } from "react";
 import ForceGraph3D from "react-force-graph-3d";
-import { useVisualLinksRenderer } from "../hooks/useVisualLinksRenderer";
-import { useMoleculeSettings } from "../hooks/useMoleculeSettings";
-import type { NodeType, LinkType, VisualLinkType } from "../types/types";
+import { useVisualLinksRenderer } from "../../hooks/useVisualLinksRenderer";
+import { useMoleculeSettings } from "../../hooks/useMoleculeSettings";
+import type { NodeType, LinkType, VisualLinkType } from "../../types/types";
 import type { ForceGraphMethods } from "react-force-graph-3d";
-import { levelToColor } from "../utils/color";
+import { levelToColor } from "../../utils/color";
 import type { JSX } from 'react';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
