@@ -1,4 +1,3 @@
-// src/app/meshExplorerSidebar.tsx
 // src/app/MeshExplorerSidebar.tsx
 import type {
   ISidebarPane,
